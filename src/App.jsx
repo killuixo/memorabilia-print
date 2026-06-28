@@ -161,7 +161,7 @@ const globalCSS = `
       z-index: 2;
   }
 
-  .item-title { font-size: 1.05em; font-weight: 700; color: var(--black); line-height: 1.15; margin-bottom: 4px; padding-right: 40px; }
+  .item-title { font-size: 1.25em; font-weight: 700; color: var(--black); line-height: 1.15; margin-bottom: 6px; padding-right: 40px; }
   
   .stars-container { margin-bottom: 8px; display: flex; gap: 2px; color: var(--gold); }
   .star { width: 12px; height: 12px; }
@@ -170,7 +170,7 @@ const globalCSS = `
   /* ------------- IMAGEM E CONTEÚDO ------------- */
   .item-body-wrapper {
       display: flex;
-      gap: 12px;
+      gap: 15px;
       height: 100%;
       overflow: hidden;
   }
@@ -178,8 +178,8 @@ const globalCSS = `
   /* Capas Maiores */
   .item-cover-box {
       flex-shrink: 0;
-      width: 80px;
-      height: 115px;
+      width: 100px;
+      height: 145px;
       background: #f4f4f4;
       border: 1px solid #e0e0e0;
       border-radius: 4px;
@@ -205,27 +205,40 @@ const globalCSS = `
 
   /* ------------- FICHA CATALOGRÁFICA ------------- */
   .catalog-ficha {
-      margin-top: 2px;
-      font-size: 0.65em;
+      margin-top: 5px;
+      font-size: 0.8em;
       display: flex;
       flex-direction: column;
-      gap: 3px;
+      gap: 5px;
   }
 
   .ficha-row {
       display: flex;
       flex-direction: row;
-      gap: 4px;
-      line-height: 1.3;
+      gap: 6px;
+      line-height: 1.4;
+      align-items: flex-start;
   }
 
   .ficha-label { font-weight: 600; color: var(--gray); white-space: nowrap; }
   .ficha-value { 
       color: var(--black); 
-      white-space: nowrap; 
-      overflow: hidden; 
-      text-overflow: ellipsis; 
+      word-wrap: break-word;
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
   }
+
+  /* Destaque do Autor */
+  .autor-highlight {
+      background-color: #f0f0f0;
+      padding: 4px 6px;
+      border-radius: 4px;
+  }
+  .autor-highlight .ficha-label { color: var(--black); }
+  .autor-highlight .ficha-value { font-weight: 800; font-size: 1.05em; color: var(--black); }
+  .star-5 .autor-highlight { background-color: rgba(197, 160, 89, 0.15); }
 
   /* ------------- DASHBOARD ESTATÍSTICAS ------------- */
   .stats-grid {
@@ -411,12 +424,15 @@ const ItemCard = ({ item, index }) => {
 
                     {fichaFields.length > 0 && (
                         <div className="catalog-ficha">
-                            {fichaFields.map(key => (
-                                <div className="ficha-row" key={key}>
-                                    <span className="ficha-label">{key}:</span>
-                                    <span className="ficha-value" title={item[key]}>{item[key]}</span>
-                                </div>
-                            ))}
+                            {fichaFields.map(key => {
+                                const isAuthor = key === 'Autor/Desenvolvedor';
+                                return (
+                                    <div className={`ficha-row ${isAuthor ? 'autor-highlight' : ''}`} key={key}>
+                                        <span className="ficha-label">{key}:</span>
+                                        <span className="ficha-value" title={item[key]}>{item[key]}</span>
+                                    </div>
+                                );
+                            })}
                         </div>
                     )}
                 </div>
