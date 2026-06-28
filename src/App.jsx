@@ -118,38 +118,91 @@ const globalCSS = `
   }
 
   .catalog-item {
-      display: flex; flex-direction: column;
-      padding-left: 12px;
+      position: relative;
+      display: flex; 
+      flex-direction: column;
+      padding: 10px 10px 10px 12px;
       border-left: 2px solid var(--gray);
       height: 75mm; /* Ajustado para caber 6 itens (3 linhas x 2 colunas) */
       overflow: hidden;
+      background: var(--white);
+      border-radius: 0 4px 4px 0;
   }
 
   .catalog-item.star-5 {
-      border-left: 3px solid var(--gold);
-      background: rgba(197, 160, 89, 0.04);
-      padding: 10px 10px 10px 12px;
-      border-radius: 0 6px 6px 0;
+      border: 1px solid rgba(197, 160, 89, 0.3); /* Borda dourada super leve em toda volta */
+      border-left: 4px solid var(--gold); /* Destaque maior na lateral */
+      background: linear-gradient(135deg, rgba(255,0,127,0.03) 0%, rgba(0,255,255,0.03) 50%, rgba(197,160,89,0.08) 100%);
+      border-radius: 6px;
+      box-shadow: 0 4px 12px rgba(197, 160, 89, 0.12); /* Sombra elegante */
   }
 
-  .item-title { font-size: 1em; font-weight: 600; color: var(--black); line-height: 1.2; margin-bottom: 4px; }
+  .item-code {
+      position: absolute;
+      top: 8px;
+      right: 10px;
+      font-size: 0.55em;
+      color: #aaa;
+      font-family: monospace;
+      letter-spacing: 0.5px;
+      z-index: 2;
+  }
+
+  .item-title { font-size: 1em; font-weight: 600; color: var(--black); line-height: 1.2; margin-bottom: 4px; padding-right: 50px; }
   .star-5 .item-title { color: #9A7B3E; }
   
   .stars-container { margin-bottom: 8px; display: flex; gap: 2px; color: var(--gold); }
   .star { width: 11px; height: 11px; }
+  .star-gradient { width: 22px; height: 22px; filter: drop-shadow(0px 1px 2px rgba(0,0,0,0.1)); margin-bottom: 4px; }
+
+  /* ------------- IMAGEM E CONTEÚDO ------------- */
+  .item-body-wrapper {
+      display: flex;
+      gap: 10px;
+      height: 100%;
+      overflow: hidden;
+  }
+
+  .item-cover-box {
+      flex-shrink: 0;
+      width: 48px;
+      height: 68px;
+      background: #f4f4f4;
+      border: 1px solid #eaeaea;
+      border-radius: 3px;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+  }
+
+  .item-cover-box img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+  }
+
+  .item-content {
+      flex: 1;
+      min-width: 0; /* Permite o text-overflow funcionar em filhos flex */
+      display: flex;
+      flex-direction: column;
+  }
 
   /* ------------- FICHA CATALOGRÁFICA ------------- */
   .catalog-ficha {
-      margin-top: 5px;
-      padding: 8px;
-      background-color: #fcfcfc;
-      border: 1px solid #f0f0f0;
+      margin-top: 2px;
+      padding: 6px;
+      background-color: rgba(255,255,255,0.6);
+      border: 1px solid rgba(0,0,0,0.05);
       border-radius: 4px;
-      font-size: 0.65em;
+      font-size: 0.6em;
       display: flex;
       flex-direction: column;
       gap: 3px;
   }
+  
+  .star-5 .catalog-ficha { border-color: rgba(197, 160, 89, 0.2); }
 
   .ficha-row {
       display: flex;
@@ -158,20 +211,12 @@ const globalCSS = `
       line-height: 1.3;
   }
 
-  .ficha-label {
-      font-weight: 600;
-      color: var(--gray);
-      white-space: nowrap;
-  }
-
-  .ficha-value {
-      color: var(--black);
-      word-break: break-word;
-  }
-  
-  .item-desc {
-      margin-top: 8px; font-size: 0.7em; font-style: italic; color: var(--gray);
-      display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+  .ficha-label { font-weight: 600; color: var(--gray); white-space: nowrap; }
+  .ficha-value { 
+      color: var(--black); 
+      white-space: nowrap; 
+      overflow: hidden; 
+      text-overflow: ellipsis; /* Evita que a ficha cresça além do limite horizontal e vertical */
   }
 
   .chart-container { width: 100%; height: 350px; margin-bottom: 50px; }
@@ -180,15 +225,8 @@ const globalCSS = `
   @media print {
       body { background-color: var(--white) !important; margin: 0; padding: 0; }
       .no-print { display: none !important; }
-      
       @page { size: A4 portrait; margin: 0; }
-      
-      .pdf-page {
-          margin: 0 !important;
-          box-shadow: none !important;
-          border: none !important;
-          page-break-after: always;
-      }
+      .pdf-page { margin: 0 !important; box-shadow: none !important; border: none !important; page-break-after: always; }
   }
 `;
 
@@ -214,10 +252,24 @@ const StarIcon = ({ filled }) => (
         <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
     </svg>
 );
+
 const HalfStarIcon = () => (
     <svg className="star" viewBox="0 0 24 24" fill="url(#half)">
         <defs><linearGradient id="half"><stop offset="50%" stopColor="currentColor"/><stop offset="50%" stopColor="transparent"/></linearGradient></defs>
         <path stroke="currentColor" strokeWidth="2" d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+    </svg>
+);
+
+const GradientStarIcon = () => (
+    <svg className="star-gradient" viewBox="0 0 24 24" stroke="none">
+        <defs>
+            <linearGradient id="grad-star" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="var(--pink)" />
+                <stop offset="50%" stopColor="var(--cyan)" />
+                <stop offset="100%" stopColor="var(--gold)" />
+            </linearGradient>
+        </defs>
+        <path fill="url(#grad-star)" d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
     </svg>
 );
 
@@ -264,7 +316,7 @@ const CoverPage = ({ title, isMain, ownerName, dateStr, colorKey = 2 }) => {
     );
 };
 
-// COMPONENTE DO ITEM (Com Ficha Catalográfica Dinâmica)
+// COMPONENTE DO ITEM (Com Imagem Real, Código Discreto, Destaque Nota 5 e Ficha Limpa)
 const ItemCard = ({ item, index }) => {
     let nota = parseFloat((item['Nota'] || '0').replace(',', '.'));
     if (isNaN(nota)) nota = 0;
@@ -272,33 +324,56 @@ const ItemCard = ({ item, index }) => {
     let isStar5 = nota === 5;
     const borderColor = isStar5 ? 'var(--gold)' : getAccentColor(index);
 
-    // Removemos os campos que terão destaque fora da ficha ou que serão ocultados
-    const excludedKeys = ['ID', 'Título', 'Nota', 'Descrição'];
+    // Campos expressamente removidos do miolo da ficha (alguns não renderizam de propósito, outros em locais específicos)
+    const excludedKeys = ['ID', 'Código Arquivístico', 'Código de Barras', 'Descrição', 'URL da Capa', 'Título', 'Nota'];
     
-    // Filtramos apenas as colunas que existem na planilha e que possuem algum valor
     const fichaFields = Object.keys(item).filter(key => 
         !excludedKeys.includes(key) && item[key] !== null && item[key] !== undefined && item[key].toString().trim() !== ''
     );
 
     return (
         <div className={`catalog-item ${isStar5 ? 'star-5' : ''}`} style={{ borderLeftColor: borderColor }}>
-            <div className="item-title">{item['Título'] || 'Sem Título'}</div>
-            
-            {(nota > 0) && <StarRating nota={nota} />}
-
-            {/* Resumo Ficha Catalográfica (Renderiza TODAS as outras informações da planilha) */}
-            {fichaFields.length > 0 && (
-                <div className="catalog-ficha">
-                    {fichaFields.map(key => (
-                        <div className="ficha-row" key={key}>
-                            <span className="ficha-label">{key}:</span>
-                            <span className="ficha-value">{item[key]}</span>
-                        </div>
-                    ))}
-                </div>
+            {/* Código Arquivístico Flutuante (Discreto) */}
+            {item['Código Arquivístico'] && (
+                <div className="item-code">{item['Código Arquivístico']}</div>
             )}
-            
-            {item['Descrição'] && <div className="item-desc">"{item['Descrição']}"</div>}
+
+            <div className="item-body-wrapper">
+                {/* Capa */}
+                {item['URL da Capa'] && item['URL da Capa'].trim() !== '' && (
+                    <div className="item-cover-box">
+                        <img 
+                            src={item['URL da Capa']} 
+                            alt="Capa" 
+                            crossOrigin="anonymous" 
+                            onError={(e) => { e.target.style.display = 'none'; e.target.parentNode.style.display = 'none'; }} 
+                        />
+                    </div>
+                )}
+
+                <div className="item-content">
+                    <div className="item-title">{item['Título'] || 'Sem Título'}</div>
+                    
+                    {/* Estrelas */}
+                    {isStar5 ? (
+                        <GradientStarIcon />
+                    ) : (
+                        (nota > 0) && <StarRating nota={nota} />
+                    )}
+
+                    {/* Ficha Resumo */}
+                    {fichaFields.length > 0 && (
+                        <div className="catalog-ficha">
+                            {fichaFields.map(key => (
+                                <div className="ficha-row" key={key}>
+                                    <span className="ficha-label">{key}:</span>
+                                    <span className="ficha-value" title={item[key]}>{item[key]}</span>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            </div>
         </div>
     );
 };
@@ -326,7 +401,6 @@ export default function App() {
         }
     };
 
-    // Paginação: Alterado para 6 itens por página (3 linhas x 2 colunas) para dar espaço para a Ficha Catalográfica
     const pdfPages = useMemo(() => {
         if (!csvData.length) return [];
         
@@ -351,7 +425,7 @@ export default function App() {
             const cleanCatName = cat.substring(2);
             pages.push(<CoverPage key={`cover-${cat}`} title={cleanCatName} colorKey={catIndex} />);
             
-            const itemsPerPage = 6; // Dando mais espaço na altura para a ficha de cada item
+            const itemsPerPage = 6; 
             for (let i = 0; i < grouped[cat].length; i += itemsPerPage) {
                 const chunk = grouped[cat].slice(i, i + itemsPerPage);
                 
