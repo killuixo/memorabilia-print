@@ -8,7 +8,7 @@ const globalCSS = `
       --gold: #C5A059;
       --black: #222222;
       --gray: #777777;
-      --light-gray: #F5F5F5;
+      --light-gray: #F9F9F9;
       --white: #FFFFFF;
   }
 
@@ -86,7 +86,6 @@ const globalCSS = `
       box-sizing: border-box;
       overflow: hidden;
       page-break-after: always;
-      /* Sombra para a visualização na tela */
       box-shadow: 0 5px 20px rgba(0,0,0,0.15);
   }
 
@@ -113,8 +112,8 @@ const globalCSS = `
       display: grid;
       grid-template-columns: 1fr 1fr;
       column-gap: 12mm;
-      row-gap: 8mm;
-      height: 245mm; /* Altura disponível descontando margens e cabeçalhos */
+      row-gap: 10mm;
+      height: 245mm;
       align-content: start;
   }
 
@@ -122,7 +121,7 @@ const globalCSS = `
       display: flex; flex-direction: column;
       padding-left: 12px;
       border-left: 2px solid var(--gray);
-      height: 55mm; /* Altura travada para caber exatos 8 itens por página (4 linhas) */
+      height: 75mm; /* Ajustado para caber 6 itens (3 linhas x 2 colunas) */
       overflow: hidden;
   }
 
@@ -133,18 +132,47 @@ const globalCSS = `
       border-radius: 0 6px 6px 0;
   }
 
-  .item-title { font-size: 1em; font-weight: 600; color: var(--black); line-height: 1.2; margin-bottom: 3px; }
+  .item-title { font-size: 1em; font-weight: 600; color: var(--black); line-height: 1.2; margin-bottom: 4px; }
   .star-5 .item-title { color: #9A7B3E; }
-  .item-subtitle { font-size: 0.65em; color: var(--gray); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px;}
-  .item-meta { font-size: 0.75em; color: #555; }
   
-  .item-desc {
-      margin-top: 6px; font-size: 0.75em; font-style: italic; color: var(--gray);
-      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  .stars-container { margin-bottom: 8px; display: flex; gap: 2px; color: var(--gold); }
+  .star { width: 11px; height: 11px; }
+
+  /* ------------- FICHA CATALOGRÁFICA ------------- */
+  .catalog-ficha {
+      margin-top: 5px;
+      padding: 8px;
+      background-color: #fcfcfc;
+      border: 1px solid #f0f0f0;
+      border-radius: 4px;
+      font-size: 0.65em;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
   }
 
-  .stars-container { margin-top: 6px; display: flex; gap: 2px; color: var(--gold); }
-  .star { width: 11px; height: 11px; }
+  .ficha-row {
+      display: flex;
+      flex-direction: row;
+      gap: 4px;
+      line-height: 1.3;
+  }
+
+  .ficha-label {
+      font-weight: 600;
+      color: var(--gray);
+      white-space: nowrap;
+  }
+
+  .ficha-value {
+      color: var(--black);
+      word-break: break-word;
+  }
+  
+  .item-desc {
+      margin-top: 8px; font-size: 0.7em; font-style: italic; color: var(--gray);
+      display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+  }
 
   .chart-container { width: 100%; height: 350px; margin-bottom: 50px; }
 
@@ -153,10 +181,7 @@ const globalCSS = `
       body { background-color: var(--white) !important; margin: 0; padding: 0; }
       .no-print { display: none !important; }
       
-      @page {
-          size: A4 portrait;
-          margin: 0; /* Zeramos a margem do browser pois o CSS .pdf-page já tem padding */
-      }
+      @page { size: A4 portrait; margin: 0; }
       
       .pdf-page {
           margin: 0 !important;
@@ -167,7 +192,7 @@ const globalCSS = `
   }
 `;
 
-// Hook para carregar as bibliotecas (PapaParse e ChartJS) via CDN para evitar problemas de compilação
+// Hook para carregar as bibliotecas (PapaParse e ChartJS)
 const useExternalScripts = () => {
     const [loaded, setLoaded] = useState(false);
     useEffect(() => {
@@ -183,7 +208,7 @@ const useExternalScripts = () => {
     return loaded;
 };
 
-// Ícones minimalistas
+// Ícones
 const StarIcon = ({ filled }) => (
     <svg className="star" viewBox="0 0 24 24" fill={filled ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2">
         <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
@@ -196,7 +221,6 @@ const HalfStarIcon = () => (
     </svg>
 );
 
-// Helpers
 const getCategoryInfo = (tipo) => {
     const t = (tipo || '').toLowerCase().trim();
     if (['livro', 'quadrinho', 'revista', 'hq', 'mangá', 'hqs'].includes(t)) return '1 LIVROS';
@@ -240,6 +264,7 @@ const CoverPage = ({ title, isMain, ownerName, dateStr, colorKey = 2 }) => {
     );
 };
 
+// COMPONENTE DO ITEM (Com Ficha Catalográfica Dinâmica)
 const ItemCard = ({ item, index }) => {
     let nota = parseFloat((item['Nota'] || '0').replace(',', '.'));
     if (isNaN(nota)) nota = 0;
@@ -247,21 +272,33 @@ const ItemCard = ({ item, index }) => {
     let isStar5 = nota === 5;
     const borderColor = isStar5 ? 'var(--gold)' : getAccentColor(index);
 
-    // Seleciona campos importantes para a linha subtítulo
-    const metaParts = [];
-    if (item['Autor/Desenvolvedor']) metaParts.push(item['Autor/Desenvolvedor']);
-    if (item['Ano']) metaParts.push(item['Ano']);
-    if (item['Editora/Gravadora']) metaParts.push(item['Editora/Gravadora']);
+    // Removemos os campos que terão destaque fora da ficha ou que serão ocultados
+    const excludedKeys = ['ID', 'Título', 'Nota', 'Descrição'];
+    
+    // Filtramos apenas as colunas que existem na planilha e que possuem algum valor
+    const fichaFields = Object.keys(item).filter(key => 
+        !excludedKeys.includes(key) && item[key] !== null && item[key] !== undefined && item[key].toString().trim() !== ''
+    );
 
     return (
         <div className={`catalog-item ${isStar5 ? 'star-5' : ''}`} style={{ borderLeftColor: borderColor }}>
-            <div className="item-subtitle">{item['Tipo'] || 'N/A'} {item['Status'] ? `• ${item['Status']}` : ''}</div>
             <div className="item-title">{item['Título'] || 'Sem Título'}</div>
             
-            {metaParts.length > 0 && <div className="item-meta">{metaParts.join(' • ')}</div>}
+            {(nota > 0) && <StarRating nota={nota} />}
+
+            {/* Resumo Ficha Catalográfica (Renderiza TODAS as outras informações da planilha) */}
+            {fichaFields.length > 0 && (
+                <div className="catalog-ficha">
+                    {fichaFields.map(key => (
+                        <div className="ficha-row" key={key}>
+                            <span className="ficha-label">{key}:</span>
+                            <span className="ficha-value">{item[key]}</span>
+                        </div>
+                    ))}
+                </div>
+            )}
             
             {item['Descrição'] && <div className="item-desc">"{item['Descrição']}"</div>}
-            {(nota > 0) && <StarRating nota={nota} />}
         </div>
     );
 };
@@ -271,7 +308,7 @@ export default function App() {
     const [csvData, setCsvData] = useState([]);
     const [fileName, setFileName] = useState("");
     const [ownerName, setOwnerName] = useState("");
-    const [viewMode, setViewMode] = useState('upload'); // 'upload' ou 'preview'
+    const [viewMode, setViewMode] = useState('upload'); 
     
     const fileInputRef = useRef(null);
     const chartTypeRef = useRef(null);
@@ -289,7 +326,7 @@ export default function App() {
         }
     };
 
-    // Paginação: 8 itens por página para caber perfeitamente no grid A4 (4 linhas, 2 colunas)
+    // Paginação: Alterado para 6 itens por página (3 linhas x 2 colunas) para dar espaço para a Ficha Catalográfica
     const pdfPages = useMemo(() => {
         if (!csvData.length) return [];
         
@@ -306,17 +343,15 @@ export default function App() {
         
         const sortedCategories = Object.keys(grouped).sort();
 
-        // 1. Capa Principal
         pages.push(<CoverPage key="main-cover" title="Catálogo" isMain={true} ownerName={ownerName} dateStr={dateStr} colorKey={3} />);
 
-        // 2. Páginas de Categorias
         sortedCategories.forEach((cat, catIndex) => {
             grouped[cat].sort((a, b) => (a['Título'] || '').localeCompare(b['Título'] || ''));
             
             const cleanCatName = cat.substring(2);
             pages.push(<CoverPage key={`cover-${cat}`} title={cleanCatName} colorKey={catIndex} />);
             
-            const itemsPerPage = 8;
+            const itemsPerPage = 6; // Dando mais espaço na altura para a ficha de cada item
             for (let i = 0; i < grouped[cat].length; i += itemsPerPage) {
                 const chunk = grouped[cat].slice(i, i + itemsPerPage);
                 
@@ -350,7 +385,6 @@ export default function App() {
             }
         });
 
-        // 3. Página de Gráficos
         pages.push(
             <div className="pdf-page" key="stats-page">
                 <div className="page-header"><span>Estatísticas</span><span>Visão Geral</span></div>
@@ -364,7 +398,6 @@ export default function App() {
         return pages;
     }, [csvData, ownerName]);
 
-    // Renderiza os gráficos apenas quando entra no modo Preview
     useEffect(() => {
         let chartTypeInstance = null;
         let chartStatusInstance = null;
@@ -409,7 +442,6 @@ export default function App() {
     }, [viewMode, csvData]);
 
     const handlePrint = () => {
-        // Dispara o comando nativo de impressão do navegador
         window.print();
     };
 
@@ -419,7 +451,6 @@ export default function App() {
         <>
             <style dangerouslySetInnerHTML={{ __html: globalCSS }} />
 
-            {/* TELA 1 - UPLOAD */}
             {viewMode === 'upload' && (
                 <div className="app-ui no-print">
                     <h1>Catálogo Tipográfico</h1>
@@ -456,19 +487,14 @@ export default function App() {
                 </div>
             )}
 
-            {/* TELA 2 - VISUALIZAÇÃO E IMPRESSÃO */}
             {viewMode === 'preview' && (
                 <div className="preview-wrapper">
-                    
-                    {/* Barra flutuante - Escondida na impressão nativa */}
                     <div className="floating-bar no-print">
                         <button onClick={() => setViewMode('upload')}>← Voltar</button>
                         <button className="print-btn" onClick={handlePrint}>Salvar PDF / Imprimir</button>
                     </div>
 
-                    {/* As páginas que serão visualizadas e impressas */}
                     {pdfPages}
-
                 </div>
             )}
         </>
