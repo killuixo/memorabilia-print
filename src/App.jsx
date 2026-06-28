@@ -130,11 +130,11 @@ const globalCSS = `
   }
 
   .catalog-item.star-5 {
-      border: 1px solid rgba(197, 160, 89, 0.3); /* Borda dourada super leve em toda volta */
-      border-left: 4px solid var(--gold); /* Destaque maior na lateral */
+      border: 1px solid rgba(197, 160, 89, 0.3);
+      border-left: 4px solid var(--gold); 
       background: linear-gradient(135deg, rgba(255,0,127,0.03) 0%, rgba(0,255,255,0.03) 50%, rgba(197,160,89,0.08) 100%);
       border-radius: 6px;
-      box-shadow: 0 4px 12px rgba(197, 160, 89, 0.12); /* Sombra elegante */
+      box-shadow: 0 4px 12px rgba(197, 160, 89, 0.12);
   }
 
   .item-code {
@@ -184,7 +184,7 @@ const globalCSS = `
 
   .item-content {
       flex: 1;
-      min-width: 0; /* Permite o text-overflow funcionar em filhos flex */
+      min-width: 0;
       display: flex;
       flex-direction: column;
   }
@@ -216,7 +216,7 @@ const globalCSS = `
       color: var(--black); 
       white-space: nowrap; 
       overflow: hidden; 
-      text-overflow: ellipsis; /* Evita que a ficha cresça além do limite horizontal e vertical */
+      text-overflow: ellipsis; 
   }
 
   .chart-container { width: 100%; height: 350px; margin-bottom: 50px; }
@@ -316,7 +316,7 @@ const CoverPage = ({ title, isMain, ownerName, dateStr, colorKey = 2 }) => {
     );
 };
 
-// COMPONENTE DO ITEM (Com Imagem Real, Código Discreto, Destaque Nota 5 e Ficha Limpa)
+// COMPONENTE DO ITEM
 const ItemCard = ({ item, index }) => {
     let nota = parseFloat((item['Nota'] || '0').replace(',', '.'));
     if (isNaN(nota)) nota = 0;
@@ -324,7 +324,6 @@ const ItemCard = ({ item, index }) => {
     let isStar5 = nota === 5;
     const borderColor = isStar5 ? 'var(--gold)' : getAccentColor(index);
 
-    // Campos expressamente removidos do miolo da ficha (alguns não renderizam de propósito, outros em locais específicos)
     const excludedKeys = ['ID', 'Código Arquivístico', 'Código de Barras', 'Descrição', 'URL da Capa', 'Título', 'Nota'];
     
     const fichaFields = Object.keys(item).filter(key => 
@@ -333,13 +332,11 @@ const ItemCard = ({ item, index }) => {
 
     return (
         <div className={`catalog-item ${isStar5 ? 'star-5' : ''}`} style={{ borderLeftColor: borderColor }}>
-            {/* Código Arquivístico Flutuante (Discreto) */}
             {item['Código Arquivístico'] && (
                 <div className="item-code">{item['Código Arquivístico']}</div>
             )}
 
             <div className="item-body-wrapper">
-                {/* Capa */}
                 {item['URL da Capa'] && item['URL da Capa'].trim() !== '' && (
                     <div className="item-cover-box">
                         <img 
@@ -354,14 +351,12 @@ const ItemCard = ({ item, index }) => {
                 <div className="item-content">
                     <div className="item-title">{item['Título'] || 'Sem Título'}</div>
                     
-                    {/* Estrelas */}
                     {isStar5 ? (
                         <GradientStarIcon />
                     ) : (
                         (nota > 0) && <StarRating nota={nota} />
                     )}
 
-                    {/* Ficha Resumo */}
                     {fichaFields.length > 0 && (
                         <div className="catalog-ficha">
                             {fichaFields.map(key => (
@@ -408,6 +403,25 @@ export default function App() {
         let pageCounter = 1;
         const dateStr = new Date().toLocaleDateString('pt-BR');
 
+        // Função de utilidade para determinar a chave de ordenação primária
+        const getSortKey = (item) => {
+            const autor = (item['Autor/Desenvolvedor'] || '').trim();
+            // Se existir autor e não for "various", ordena por autor. Senão, ordena por título.
+            if (autor && autor.toLowerCase() !== 'various') {
+                return autor;
+            }
+            return (item['Título'] || '').trim();
+        };
+
+        // Função para formatar a letra do dicionário no cabeçalho
+        const getDictLetter = (str) => {
+            if (!str) return '?';
+            const char = str.charAt(0).toUpperCase();
+            // Se começar por um número, devolve '#'
+            if (/[0-9]/.test(char)) return '#';
+            return char;
+        };
+
         const grouped = {};
         csvData.forEach(item => {
             const cat = getCategoryInfo(item['Tipo']);
@@ -420,7 +434,14 @@ export default function App() {
         pages.push(<CoverPage key="main-cover" title="Catálogo" isMain={true} ownerName={ownerName} dateStr={dateStr} colorKey={3} />);
 
         sortedCategories.forEach((cat, catIndex) => {
-            grouped[cat].sort((a, b) => (a['Título'] || '').localeCompare(b['Título'] || ''));
+            
+            // Nova lógica de ordenação (Natural sort: números antes de letras, '2' antes de '16')
+            grouped[cat].sort((a, b) => {
+                const keyA = getSortKey(a);
+                const keyB = getSortKey(b);
+                // Utilizando localeCompare com 'numeric: true' para forçar a avaliação natural dos números
+                return keyA.localeCompare(keyB, 'pt', { numeric: true, sensitivity: 'base' });
+            });
             
             const cleanCatName = cat.substring(2);
             pages.push(<CoverPage key={`cover-${cat}`} title={cleanCatName} colorKey={catIndex} />);
@@ -429,11 +450,14 @@ export default function App() {
             for (let i = 0; i < grouped[cat].length; i += itemsPerPage) {
                 const chunk = grouped[cat].slice(i, i + itemsPerPage);
                 
-                const firstTitle = chunk[0]['Título'] || '?';
-                const lastTitle = chunk[chunk.length - 1]['Título'] || '?';
-                const firstLetter = firstTitle.charAt(0).toUpperCase();
-                const lastLetter = lastTitle.charAt(0).toUpperCase();
+                // Cabeçalho adaptado para refletir a nova chave de ordenação primária
+                const firstKey = getSortKey(chunk[0]);
+                const lastKey = getSortKey(chunk[chunk.length - 1]);
+                
+                const firstLetter = getDictLetter(firstKey);
+                const lastLetter = getDictLetter(lastKey);
                 const dictStr = firstLetter === lastLetter ? firstLetter : `${firstLetter} - ${lastLetter}`;
+                
                 const currentPage = pageCounter;
 
                 pages.push(
