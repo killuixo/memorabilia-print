@@ -5,7 +5,7 @@ const globalCSS = `
 
   :root {
       --pink: #FF007F;
-      --cyan: #008B8B; /* Ciano mais escuro para melhor legibilidade */
+      --cyan: #008B8B;
       --gold: #C5A059;
       --black: #222222;
       --gray: #777777;
@@ -23,7 +23,7 @@ const globalCSS = `
       print-color-adjust: exact !important;
   }
 
-  /* ------------- INTERFACE DE USUÁRIO ------------- */
+  /* ------------- INTERFACE DE UTILIZADOR ------------- */
   .app-ui {
       max-width: 600px; margin: 10vh auto; background: var(--white);
       padding: 40px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);
@@ -75,9 +75,7 @@ const globalCSS = `
   }
 
   /* ------------- CAPAS E FONTES RETRÔ ------------- */
-  .vcr-font {
-      font-family: 'VT323', monospace;
-  }
+  .vcr-font { font-family: 'VT323', monospace; }
   
   .cover-page { 
       display: flex; flex-direction: column; justify-content: center; 
@@ -86,13 +84,11 @@ const globalCSS = `
   
   .cover-subtitle { font-size: 2em; font-weight: 300; margin: 0 0 10px 0; color: var(--gray); text-transform: uppercase; letter-spacing: -0.5px;}
   
-  /* Titulos das categorias com stroke (negrito forçado) */
   .category-title { 
       font-size: 6em; margin: 0; line-height: 1; letter-spacing: 2px; text-transform: uppercase;
-      -webkit-text-stroke: 3px currentColor; /* Deixa a fonte VCR bem grossa */
+      -webkit-text-stroke: 3px currentColor;
   }
 
-  /* Nome do dono com degradê furtacor */
   .cover-owner { 
       font-size: 8em; margin: 0; line-height: 0.9;
       background: linear-gradient(135deg, var(--pink) 0%, var(--cyan) 50%, var(--gold) 100%);
@@ -107,21 +103,21 @@ const globalCSS = `
   .m-line-h { position: absolute; height: 4px; background: var(--black); left: 0; right: 0; }
   .m-block { position: absolute; }
 
-  /* ------------- GRID DE ITENS ------------- */
+  /* ------------- GRELHA DE ITENS ------------- */
   .catalog-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      column-gap: 15mm;
-      row-gap: 8mm; /* Espaço reduzido entre caixas */
+      column-gap: 12mm;
+      row-gap: 7mm; /* Espaço otimizado para 5 linhas */
       height: 245mm;
       align-content: start;
-      align-items: start; /* Para as caixas não esticarem */
+      align-items: start;
   }
 
   .catalog-item {
-      display: block; /* Essencial para o float funcionar */
-      padding: 12px 10px 12px 15px;
-      border-left: 4px solid; /* Cor definida inline */
+      display: block; 
+      padding: 10px 10px 10px 15px;
+      border-left: 4px solid; 
       background: var(--white);
       border-radius: 0 6px 6px 0;
       box-sizing: border-box;
@@ -131,54 +127,33 @@ const globalCSS = `
   .catalog-item.star-5 {
       border-left-width: 8px !important;
       border: 1px solid rgba(0,0,0,0.05);
-      border-left: 8px solid;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.15); /* Contraste forte da sombra */
+      box-shadow: 0 10px 25px rgba(0,0,0,0.15); 
       border-radius: 4px 8px 8px 4px;
       padding-left: 12px;
   }
 
   .item-code {
-      float: right;
-      font-size: 0.6em;
-      color: var(--black);
-      font-weight: 800;
-      font-family: monospace;
-      margin-left: 10px;
+      float: right; font-size: 0.55em; color: var(--black); font-weight: 800; font-family: monospace; margin-left: 8px;
   }
 
   .item-cover-box {
-      float: left;
-      width: 75px;
-      height: 105px;
-      margin-right: 12px;
-      margin-bottom: 6px;
-      background: #f4f4f4;
-      border: 1px solid #e0e0e0;
-      border-radius: 4px;
-      overflow: hidden;
+      float: left; width: 70px; height: 100px; margin-right: 12px; margin-bottom: 6px;
+      background: #f4f4f4; border: 1px solid #e0e0e0; border-radius: 4px; overflow: hidden;
       display: flex; align-items: center; justify-content: center;
       box-shadow: 2px 2px 8px rgba(0,0,0,0.1);
   }
 
   .item-cover-box img { width: 100%; height: 100%; object-fit: cover; }
 
-  /* Tipografia do Item */
-  .item-title { font-size: 1.1em; font-weight: 800; color: var(--black); line-height: 1.1; margin-bottom: 4px; }
-  .item-author { font-size: 0.95em; font-weight: 700; line-height: 1.2; margin-bottom: 6px; }
+  .item-title { font-size: 1.05em; font-weight: 800; color: var(--black); line-height: 1.1; margin-bottom: 4px; }
+  .item-author { font-size: 0.9em; font-weight: 700; line-height: 1.2; margin-bottom: 6px; }
   
   .stars-container { margin-bottom: 6px; display: flex; gap: 2px; }
   .star { width: 13px; height: 13px; }
-  .star-gradient { width: 24px; height: 24px; filter: drop-shadow(0px 2px 3px rgba(0,0,0,0.2)); margin-bottom: 4px; }
+  .star-gradient { width: 22px; height: 22px; filter: drop-shadow(0px 2px 3px rgba(0,0,0,0.2)); margin-bottom: 4px; }
 
   /* ------------- FICHA CATALOGRÁFICA ------------- */
-  .catalog-ficha {
-      font-size: 0.7em;
-      display: flex;
-      flex-direction: column;
-      gap: 3px;
-      margin-top: 4px;
-  }
-
+  .catalog-ficha { font-size: 0.65em; display: flex; flex-direction: column; gap: 3px; margin-top: 4px; }
   .ficha-row { display: flex; flex-direction: row; gap: 4px; line-height: 1.3; }
   .ficha-label { font-weight: 600; color: var(--gray); text-transform: uppercase; white-space: nowrap; font-size: 0.9em;}
   .ficha-value { font-weight: 700; color: var(--black); word-break: break-word; }
@@ -199,14 +174,16 @@ const globalCSS = `
 
   /* ------------- REGRAS DE IMPRESSÃO NATIVA ------------- */
   @media print {
-      body { background-color: var(--white) !important; margin: 0; padding: 0; }
+      body, html { background-color: var(--white) !important; margin: 0; padding: 0; height: auto !important; }
       .no-print { display: none !important; }
       @page { size: A4 portrait; margin: 0; }
-      .pdf-page { margin: 0 !important; box-shadow: none !important; border: none !important; page-break-after: always; }
+      /* Previne que o Flexbox corte o PDF */
+      .preview-wrapper { display: block !important; padding: 0 !important; gap: 0 !important; }
+      .pdf-page { margin: 0 !important; box-shadow: none !important; border: none !important; page-break-after: always !important; page-break-inside: avoid !important; }
   }
 `;
 
-// Hook para carregar as bibliotecas (PapaParse e ChartJS)
+// Hook para carregar as bibliotecas externas
 const useExternalScripts = () => {
     const [loaded, setLoaded] = useState(false);
     useEffect(() => {
@@ -264,14 +241,13 @@ const getSortKey = (item) => {
     return (item['Título'] || '').trim();
 };
 
-// Lógica de Cores Temáticas para as Estrelas
 const StarRating = ({ nota }) => {
     let n = parseFloat((nota || '0').replace(',', '.'));
     if (isNaN(n)) n = 0;
 
     if (n === 5) return <div className="stars-container"><GradientStarIcon /></div>;
     
-    let color = '#ccc'; // Vazias
+    let color = '#ccc';
     if (n > 0 && n <= 2) color = 'var(--gold)';
     else if (n > 2 && n <= 3) color = 'var(--cyan)';
     else if (n > 3 && n < 5) color = 'var(--pink)';
@@ -285,7 +261,6 @@ const StarRating = ({ nota }) => {
     return <div className="stars-container">{stars}</div>;
 };
 
-// Componente da Capa
 const CoverPage = ({ title, isMain, ownerName, dateStr, colorIndex }) => {
     const palette = ['var(--pink)', 'var(--cyan)', 'var(--gold)', 'var(--black)'];
     const accent = palette[colorIndex % 3];
@@ -306,7 +281,7 @@ const CoverPage = ({ title, isMain, ownerName, dateStr, colorIndex }) => {
                         <h2 className="cover-subtitle">Coleção em Suporte Físico - Memorabilia</h2>
                         <h1 className="cover-owner vcr-font">{ownerName || 'Acervo'}</h1>
                         <div className="cover-meta">
-                            <div style={{ fontSize: '0.85em', marginTop: '15px' }}>Gerado em {dateStr}</div>
+                            <div style={{ fontSize: '0.85em', marginTop: '15px' }}>Gerado a {dateStr}</div>
                         </div>
                     </>
                 ) : (
@@ -320,7 +295,7 @@ const CoverPage = ({ title, isMain, ownerName, dateStr, colorIndex }) => {
     );
 };
 
-// COMPONENTE DO ITEM COM FLOAT E FICHA INTELIGENTE
+// Item sem o campo 'Descrição' para poupar espaço
 const ItemCard = ({ item, accentColor }) => {
     let nota = parseFloat((item['Nota'] || '0').replace(',', '.'));
     if (isNaN(nota)) nota = 0;
@@ -332,7 +307,6 @@ const ItemCard = ({ item, accentColor }) => {
     const timeVal = item['Páginas/Tempo'] || item['Faixas'] || item['Minutos'] || item['Horas'];
     const autor = (item['Autor/Desenvolvedor'] || '').trim();
 
-    // Lógica inteligente de status e labels
     let stat = item['Status'];
     if (cat === 'DISCOS' || cat === 'VÍDEO') {
         stat = nota > 0 ? 'Concluído' : 'Não Iniciado';
@@ -341,12 +315,11 @@ const ItemCard = ({ item, accentColor }) => {
     let pLabel = 'EDITORA/GRAVADORA';
     let tLabel = 'PÁGINAS/TEMPO';
     let isDisco = false;
-    let isVideo = false;
 
     if(cat === 'LIVROS') { pLabel = 'Editora'; tLabel = 'Páginas'; }
     if(cat === 'DISCOS') { pLabel = 'Gravadora'; tLabel = 'Faixas'; isDisco = true; }
     if(cat === 'GAMES') { pLabel = 'Desenv.'; tLabel = 'Horas'; }
-    if(cat === 'VÍDEO') { pLabel = 'Produtora'; tLabel = 'Minutos'; isVideo = true; }
+    if(cat === 'VÍDEO') { pLabel = 'Produtora'; tLabel = 'Minutos'; }
 
     return (
         <div className={`catalog-item ${isStar5 ? 'star-5' : ''}`} style={{ borderLeftColor: accentColor }}>
@@ -357,14 +330,12 @@ const ItemCard = ({ item, accentColor }) => {
                 </div>
             )}
 
-            {/* Código Arquivístico flutuando a direita (Neutro e Negrito) */}
             {item['Código Arquivístico'] && (
                 <div className="item-code">{item['Código Arquivístico']}</div>
             )}
 
             <div className="item-title">{item['Título'] || 'Sem Título'}</div>
             
-            {/* O Autor ganha a cor de destaque (Ciano, Pink ou Dourado) */}
             {autor && autor.toLowerCase() !== 'various' && cat !== 'GAMES' && (
                 <div className="item-author" style={{ color: accentColor }}>{autor}</div>
             )}
@@ -381,7 +352,6 @@ const ItemCard = ({ item, accentColor }) => {
                 {publisher && (
                     <div className="ficha-row"><span className="ficha-label">{pLabel}:</span><span className="ficha-value">{publisher}</span></div>
                 )}
-                {/* Oculta status em discos. Em Vídeo, se for automático, exibimos? O usuário disse 'oculte os status em discos'. Vamos manter oculto para discos. */}
                 {!isDisco && stat && (
                     <div className="ficha-row"><span className="ficha-label">Status:</span><span className="ficha-value">{stat}</span></div>
                 )}
@@ -402,7 +372,6 @@ export default function App() {
     
     const fileInputRef = useRef(null);
     
-    // Referências dos 4 gráficos
     const chartTypeRef = useRef(null);
     const chartStatusRef = useRef(null);
     const chartRatingRef = useRef(null);
@@ -420,12 +389,28 @@ export default function App() {
         }
     };
 
+    // Cálculos seguros usando useMemo (Resolve o ecrã branco!)
+    const aggregates = useMemo(() => {
+        let p = 0, f = 0, m = 0, h = 0;
+        csvData.forEach(item => {
+            const cat = getCategoryInfo(item['Tipo']).substring(2);
+            const val = parseInt(item['Páginas/Tempo'] || item['Faixas'] || item['Minutos'] || item['Horas'] || 0);
+            if (!isNaN(val)) {
+                if (cat === 'LIVROS') p += val;
+                if (cat === 'DISCOS') f += val;
+                if (cat === 'VÍDEO') m += val;
+                if (cat === 'GAMES') h += val;
+            }
+        });
+        return { p, f, m, h };
+    }, [csvData]);
+
     const pdfPages = useMemo(() => {
         if (!csvData.length) return [];
         
         const pages = [];
         let pageCounter = 1;
-        const dateStr = new Date().toLocaleDateString('pt-BR');
+        const dateStr = new Date().toLocaleDateString('pt-PT');
 
         const grouped = {};
         csvData.forEach(item => {
@@ -447,14 +432,13 @@ export default function App() {
                 return keyA.localeCompare(keyB, 'pt', { numeric: true, sensitivity: 'base' });
             });
 
-            // Lógica Anti-Colisão de Cores
             let lastColorIdx = -1;
             const authorColorMap = {};
 
             const cleanCatName = cat.substring(2);
             pages.push(<CoverPage key={`cover-${cat}`} title={cleanCatName} isMain={false} colorIndex={catIndex + 1} />);
             
-            // Alterado para 10 itens por página (5 linhas, 2 colunas) - Otimização de espaço
+            // Agora garantimos os 10 Itens por página!
             const itemsPerPage = 10; 
             for (let i = 0; i < grouped[cat].length; i += itemsPerPage) {
                 const chunk = grouped[cat].slice(i, i + itemsPerPage);
@@ -485,7 +469,6 @@ export default function App() {
                             {chunk.map((item, idx) => {
                                 const authKey = getSortKey(item);
                                 if (authorColorMap[authKey] === undefined) {
-                                    // Sorteia a próxima cor garantindo que não seja igual a última usada
                                     let nextColor = (lastColorIdx + 1) % 3;
                                     authorColorMap[authKey] = nextColor;
                                     lastColorIdx = nextColor;
@@ -506,19 +489,18 @@ export default function App() {
             }
         });
 
-        // 3. Página de Estatísticas 
         pages.push(
             <div className="pdf-page" key="stats-page">
                 <div className="page-header"><span className="vcr-font">Estatísticas</span><span>Visão Geral</span></div>
                 
                 <h2 style={{ fontWeight: 300, fontSize: '2em', marginBottom: '20px', marginTop: '10px' }}>Visão Geral do Acervo</h2>
                 
-                {/* Placar de Agregados */}
+                {/* Agora consome diretamente o estado calculado pelo React de forma segura */}
                 <div className="stats-header-bar">
-                    <div className="stat-block"><div className="stat-num" id="tot-paginas">0</div><div className="stat-lbl">Páginas Lidas</div></div>
-                    <div className="stat-block"><div className="stat-num" id="tot-faixas">0</div><div className="stat-lbl">Faixas Ouvidas</div></div>
-                    <div className="stat-block"><div className="stat-num" id="tot-minutos">0</div><div className="stat-lbl">Min. Assistidos</div></div>
-                    <div className="stat-block"><div className="stat-num" id="tot-horas">0</div><div className="stat-lbl">Horas Jogadas</div></div>
+                    <div className="stat-block"><div className="stat-num">{aggregates.p}</div><div className="stat-lbl">Páginas Lidas</div></div>
+                    <div className="stat-block"><div className="stat-num">{aggregates.f}</div><div className="stat-lbl">Faixas Ouvidas</div></div>
+                    <div className="stat-block"><div className="stat-num">{aggregates.m}</div><div className="stat-lbl">Min. Assistidos</div></div>
+                    <div className="stat-block"><div className="stat-num">{aggregates.h}</div><div className="stat-lbl">Horas Jogadas</div></div>
                 </div>
 
                 <div className="stats-grid">
@@ -545,7 +527,7 @@ export default function App() {
         );
 
         return pages;
-    }, [csvData, ownerName]);
+    }, [csvData, ownerName, aggregates]);
 
     useEffect(() => {
         const instances = [];
@@ -556,10 +538,8 @@ export default function App() {
 
             const catCount = {};
             const statusCount = {};
-            const ratingCount = { 'Nota 5': 0, 'Nota 4': 0, 'Nota 3': 0, 'Nota 2': 0, 'Nota 1': 0 }; // Removido S/ Nota
+            const ratingCount = { 'Nota 5': 0, 'Nota 4': 0, 'Nota 3': 0, 'Nota 2': 0, 'Nota 1': 0 }; 
             const pubCount = {};
-            
-            let totP = 0, totF = 0, totM = 0, totH = 0;
 
             csvData.forEach(item => {
                 const catInfo = getCategoryInfo(item['Tipo']);
@@ -568,44 +548,25 @@ export default function App() {
                 
                 let nota = parseFloat((item['Nota'] || '0').replace(',', '.'));
                 
-                // Status Inteligente (Considerando nota para mídias sem status manual)
                 let stat = item['Status'] || 'Não Definido';
                 if (cat === 'DISCOS' || cat === 'VÍDEO') {
                     stat = nota > 0 ? 'Concluído' : 'Não Iniciado';
                 }
                 statusCount[stat] = (statusCount[stat] || 0) + 1;
 
-                // Ratings (Excluindo 0 e NaN)
                 if (nota === 5) ratingCount['Nota 5']++;
                 else if (nota >= 4) ratingCount['Nota 4']++;
                 else if (nota >= 3) ratingCount['Nota 3']++;
                 else if (nota >= 2) ratingCount['Nota 2']++;
                 else if (nota > 0) ratingCount['Nota 1']++;
 
-                // Publisher Count
                 const publisher = item['Editora/Gravadora'] || item['Produtora'] || item['Desenvolvedora'] || '';
                 if(publisher && publisher.trim() !== '') {
                     pubCount[publisher.trim()] = (pubCount[publisher.trim()] || 0) + 1;
                 }
-
-                // Agregados
-                const timeVal = parseInt(item['Páginas/Tempo'] || item['Faixas'] || item['Minutos'] || item['Horas'] || 0);
-                if (cat === 'LIVROS') totP += timeVal;
-                if (cat === 'DISCOS') totF += timeVal;
-                if (cat === 'VÍDEO') totM += timeVal;
-                if (cat === 'GAMES') totH += timeVal;
             });
 
-            // Atualiza o DOM dos totais
-            document.getElementById('tot-paginas').innerText = totP;
-            document.getElementById('tot-faixas').innerText = totF;
-            document.getElementById('tot-minutos').innerText = totM;
-            document.getElementById('tot-horas').innerText = totH;
-
-            // Ordenando Top Editoras
             const sortedPubs = Object.entries(pubCount).sort((a, b) => b[1] - a[1]).slice(0, 5);
-
-            // Paleta Estrita: Pink, Cyan, Gold, White/Black, Black
             const paletteStrict = ['#FF007F', '#008B8B', '#C5A059', '#FFFFFF', '#000000'];
 
             instances.push(new window.Chart(chartTypeRef.current, {
@@ -651,7 +612,7 @@ export default function App() {
 
     const handlePrint = () => window.print();
 
-    if (!scriptsLoaded) return <div style={{ padding: 40, textAlign: 'center' }}>Iniciando o sistema...</div>;
+    if (!scriptsLoaded) return <div style={{ padding: 40, textAlign: 'center' }}>A iniciar o sistema...</div>;
 
     return (
         <>
@@ -660,7 +621,7 @@ export default function App() {
             {viewMode === 'upload' && (
                 <div className="app-ui no-print">
                     <h1>Catálogo Editorial</h1>
-                    <p>Importe sua coleção em formato CSV. O layout editorial será gerado fluidamente para máxima otimização do espaço em A4.</p>
+                    <p>Importe a sua coleção em formato CSV. O layout editorial será gerado fluidamente para a máxima otimização de espaço em A4.</p>
                     
                     <input type="file" ref={fileInputRef} accept=".csv" style={{ display: 'none' }} onChange={handleFileUpload} />
                     
@@ -670,7 +631,7 @@ export default function App() {
                             <polyline points="17 8 12 3 7 8"></polyline>
                             <line x1="12" y1="3" x2="12" y2="15"></line>
                         </svg>
-                        <h3 style={{ fontWeight: 400, color: '#333' }}>{fileName ? fileName : 'Selecione sua planilha .csv'}</h3>
+                        <h3 style={{ fontWeight: 400, color: '#333' }}>{fileName ? fileName : 'Selecione a sua folha de cálculo .csv'}</h3>
                     </div>
 
                     <div style={{ marginBottom: '30px' }}>
@@ -681,7 +642,7 @@ export default function App() {
                     </div>
 
                     <button className="primary-btn" onClick={() => setViewMode('preview')} disabled={csvData.length === 0}>
-                        {csvData.length === 0 ? 'Aguardando Arquivo...' : 'Gerar e Visualizar Catálogo'}
+                        {csvData.length === 0 ? 'A Aguardar Ficheiro...' : 'Gerar e Visualizar Catálogo'}
                     </button>
                 </div>
             )}
@@ -690,7 +651,7 @@ export default function App() {
                 <div className="preview-wrapper">
                     <div className="floating-bar no-print">
                         <button onClick={() => setViewMode('upload')}>← Voltar</button>
-                        <button className="print-btn" onClick={handlePrint}>Salvar PDF / Imprimir</button>
+                        <button className="print-btn" onClick={handlePrint}>Guardar PDF / Imprimir</button>
                     </div>
 
                     {pdfPages}
