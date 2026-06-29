@@ -382,6 +382,7 @@ export default function App() {
     const [fileName, setFileName] = useState("");
     const [ownerName, setOwnerName] = useState("");
     const [viewMode, setViewMode] = useState('upload'); 
+    const [coverColorIndex, setCoverColorIndex] = useState(3); // Estado para a cor randômica da Capa
     
     const fileInputRef = useRef(null);
     const chartTypeRef = useRef(null);
@@ -425,7 +426,7 @@ export default function App() {
         const sortedCategories = Object.keys(grouped).sort();
 
         // 1. Capa Master
-        pages.push(<CoverPage key="main-cover" title="Catálogo" isMain={true} ownerName={ownerName} dateStr={dateStr} colorKey={3} />);
+        pages.push(<CoverPage key="main-cover" title="Catálogo" isMain={true} ownerName={ownerName} dateStr={dateStr} colorKey={coverColorIndex} />);
 
         // 2. Iterando pelas Categorias
         sortedCategories.forEach((cat, catIndex) => {
@@ -442,6 +443,23 @@ export default function App() {
                 return titleA.localeCompare(titleB, 'pt', { numeric: true, sensitivity: 'base' });
             });
             
+            // Atribuição de cores (Lógica Anti-Colisão Visual de Autores Diferentes)
+            let lastColorIndex = -1;
+            let lastKey = null;
+            grouped[cat].forEach(item => {
+                const currentKey = getSortKey(item);
+                const hIndex = getHashIndex(currentKey);
+                if (currentKey !== lastKey) {
+                    let newIndex = hIndex % 3;
+                    if (newIndex === lastColorIndex) {
+                        newIndex = (lastColorIndex + 1) % 3; // Força uma cor diferente caso colida
+                    }
+                    lastColorIndex = newIndex;
+                    lastKey = currentKey;
+                }
+                item._colorIndex = lastColorIndex;
+            });
+
             const cleanCatName = cat.substring(2);
             pages.push(<CoverPage key={`cover-${cat}`} title={cleanCatName} colorKey={catIndex} />);
             
@@ -669,7 +687,10 @@ export default function App() {
                         />
                     </div>
 
-                    <button className="primary-btn" onClick={() => setViewMode('preview')} disabled={csvData.length === 0}>
+                    <button className="primary-btn" onClick={() => {
+                        setCoverColorIndex(Math.floor(Math.random() * 3));
+                        setViewMode('preview');
+                    }} disabled={csvData.length === 0}>
                         {csvData.length === 0 ? 'Aguardando Arquivo...' : 'Gerar e Visualizar Catálogo'}
                     </button>
                 </div>
