@@ -79,7 +79,7 @@ const globalCSS = `
   /* ------------- PÁGINA A4 ------------- */
   .pdf-page {
       width: 210mm;
-      height: 297mm;
+      height: 297mm; /* Altura exata da A4 */
       background: var(--white);
       position: relative;
       padding: 20mm 15mm 20mm 15mm;
@@ -124,52 +124,66 @@ const globalCSS = `
       row-gap: 12mm;
       height: 245mm;
       align-content: start;
-      align-items: start;
+      align-items: start; /* Permite que o item ocupe só a altura do próprio conteúdo */
   }
 
+  /* ITEM FLUTUANTE (FLOAT) PARA TEXTO ABRAÇAR A IMAGEM */
   .catalog-item {
       position: relative;
-      display: block; 
-      padding: 0 0 10px 12px;
-      margin-bottom: 10px;
-      border-left: 3px solid; 
-      overflow: hidden;
+      display: block; /* Block para permitir float dos filhos */
+      padding: 12px 12px 12px 15px;
+      margin-bottom: 5px;
+      border-left: 3px solid; /* Cor injetada no React */
       background: var(--white);
       box-sizing: border-box;
       page-break-inside: avoid;
+      border-radius: 4px;
+      /* Sombra com mais contraste para todos os itens */
+      box-shadow: 2px 4px 12px rgba(0,0,0,0.12);
   }
 
-  /* Destaque 5 Estrelas */
+  /* Destaque 5 Estrelas: Mais Sombra, Borda Grossa, Fundo Levemente Destacado */
   .catalog-item.star-5 {
       border-left-width: 8px !important;
-      background: #fcfcfc;
-      box-shadow: 4px 6px 18px rgba(0,0,0,0.08);
-      border-radius: 0 8px 8px 0;
-      padding: 12px 12px 12px 15px;
-      margin-top: -4px;
+      background: #fdfdfd;
+      border-radius: 4px 8px 8px 4px;
+      /* Sombra super imponente e profunda */
+      box-shadow: 4px 8px 22px rgba(0,0,0,0.22);
   }
 
   .item-code {
       position: absolute;
-      top: 0;
+      top: 5px;
       right: 5px;
-      font-size: 0.5em;
+      font-size: 0.55em;
       color: #ccc;
       font-family: monospace;
       z-index: 2;
   }
 
-  .item-title { font-size: 1.05em; font-weight: 700; color: var(--black); line-height: 1.15; margin-bottom: 4px; padding-right: 40px; }
+  .item-title { 
+      font-size: 1.1em; 
+      font-weight: 800; 
+      color: var(--black); 
+      line-height: 1.15; 
+      margin-bottom: 2px; 
+      padding-right: 40px; 
+  }
   
-  .item-author { font-weight: 800; font-size: 1em; color: var(--black); margin-bottom: 8px; }
+  .item-author { 
+      font-weight: 600; 
+      font-size: 0.9em; 
+      color: #444; 
+      margin-bottom: 8px; 
+  }
   
   .stars-container { margin-bottom: 8px; display: flex; gap: 2px; color: var(--gold); }
-  .star { width: 12px; height: 12px; }
-  .star-gradient { width: 22px; height: 22px; filter: drop-shadow(0px 2px 3px rgba(0,0,0,0.15)); margin-bottom: 4px; }
+  .star { width: 13px; height: 13px; }
+  .star-gradient { width: 24px; height: 24px; filter: drop-shadow(0px 2px 3px rgba(0,0,0,0.15)); margin-bottom: 4px; }
 
-  /* ------------- IMAGEM E CONTEÚDO ------------- */
+  /* IMAGEM FLUTUANTE */
   .item-cover-box {
-      float: left;
+      float: left; /* O segredo para o texto fluir embaixo */
       width: 90px;
       height: 130px;
       background: #f4f4f4;
@@ -179,9 +193,9 @@ const globalCSS = `
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 2px 2px 8px rgba(0,0,0,0.05);
+      box-shadow: 2px 2px 6px rgba(0,0,0,0.08);
       margin-right: 15px;
-      margin-bottom: 10px;
+      margin-bottom: 5px;
   }
 
   .item-cover-box img {
@@ -192,7 +206,6 @@ const globalCSS = `
 
   /* ------------- FICHA CATALOGRÁFICA ------------- */
   .catalog-ficha {
-      margin-top: 2px;
       font-size: 0.7em;
       display: flex;
       flex-direction: column;
@@ -202,18 +215,28 @@ const globalCSS = `
   .ficha-row {
       display: flex;
       flex-direction: row;
-      gap: 4px;
+      gap: 5px;
       line-height: 1.3;
   }
 
-  .ficha-label { font-weight: 600; color: var(--gray); white-space: nowrap; text-transform: uppercase; font-size: 0.8em; }
+  .ficha-label { 
+      font-weight: 600; 
+      color: var(--gray); 
+      white-space: nowrap; 
+      text-transform: uppercase; 
+      font-size: 0.85em; 
+  }
+  
   .ficha-value { 
       color: var(--black); 
-      overflow: hidden; 
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      -webkit-box-orient: vertical;
-      font-weight: 600;
+      font-weight: 500;
+  }
+
+  /* Para limpar o float no final do item */
+  .catalog-item::after {
+      content: "";
+      display: table;
+      clear: both;
   }
 
   /* ------------- DASHBOARD ESTATÍSTICAS ------------- */
@@ -304,7 +327,7 @@ const getCategoryInfo = (tipo) => {
     return '5 OUTROS';
 };
 
-// Alterna entre Pink, Ciano e Dourado
+// Alterna entre Pink, Ciano e Dourado para a borda
 const getAccentColor = (index) => {
     const colors = ['var(--pink)', 'var(--cyan)', 'var(--gold)'];
     return colors[index % colors.length];
@@ -320,16 +343,13 @@ const StarRating = ({ nota }) => {
     return <div className="stars-container">{stars}</div>;
 };
 
-// Capa Aprimorada com Detalhes Mondrian Discretos e Dono do Acervo em Destaque
+// Capa Mondrian com blocos geométricos
 const CoverPage = ({ title, isMain, ownerName, dateStr }) => {
     return (
         <div className="pdf-page">
             <div className="mondrian-decor">
-                {/* Geometria discreta Mondrian nas bordas e cantos */}
                 <div className="m-line-v" style={{ left: '20mm', backgroundColor: '#e5e5e5' }}></div>
                 <div className="m-line-h" style={{ bottom: '40mm', backgroundColor: '#e5e5e5' }}></div>
-                
-                {/* Blocos de cor abstratos */}
                 <div className="m-block" style={{ top: '0', right: '30mm', width: '20mm', height: '10mm', backgroundColor: 'var(--cyan)' }}></div>
                 <div className="m-block" style={{ bottom: '15mm', left: '15mm', width: '5mm', height: '25mm', backgroundColor: 'var(--pink)' }}></div>
                 <div className="m-block" style={{ top: '60mm', right: '0', width: '8mm', height: '40mm', backgroundColor: 'var(--gold)' }}></div>
@@ -355,15 +375,13 @@ const CoverPage = ({ title, isMain, ownerName, dateStr }) => {
     );
 };
 
-// COMPONENTE DO ITEM
+// COMPONENTE DO ITEM (Agora usa Float para texto envolver a imagem!)
 const ItemCard = ({ item, index }) => {
     let nota = parseFloat((item['Nota'] || '0').replace(',', '.'));
     if (isNaN(nota)) nota = 0;
     
     let isStar5 = nota === 5;
-    
-    // Agora o item de 5 estrelas também recebe a cor do ciclo para a borda
-    const borderColor = getAccentColor(index);
+    const borderColor = getAccentColor(index); // 5 estrelas mantêm o padrão de cor, só ganham borda mais grossa
 
     const excludedKeys = ['ID', 'Código Arquivístico', 'Código de Barras', 'Descrição', 'URL da Capa', 'Título', 'Nota', 'Autor/Desenvolvedor'];
     
@@ -377,7 +395,7 @@ const ItemCard = ({ item, index }) => {
                 <div className="item-code">{item['Código Arquivístico']}</div>
             )}
 
-            {/* Imagem agora flutua a esquerda para que o texto a envolva */}
+            {/* Imagem Flutuando à esquerda */}
             {item['URL da Capa'] && item['URL da Capa'].trim() !== '' && (
                 <div className="item-cover-box">
                     <img 
@@ -389,9 +407,10 @@ const ItemCard = ({ item, index }) => {
                 </div>
             )}
 
+            {/* O texto fluirá aqui e, se passar da imagem, ocupará a largura toda embaixo */}
             <div className="item-title">{item['Título'] || 'Sem Título'}</div>
             
-            {/* O autor ganhou peso e subiu direto para o título, sem rótulos feios */}
+            {/* O Autor ganhou destaque logo abaixo do título sem o rótulo chato */}
             {item['Autor/Desenvolvedor'] && item['Autor/Desenvolvedor'].trim() !== '' && (
                 <div className="item-author">{item['Autor/Desenvolvedor']}</div>
             )}
@@ -406,8 +425,8 @@ const ItemCard = ({ item, index }) => {
                 <div className="catalog-ficha">
                     {fichaFields.map(key => (
                         <div className="ficha-row" key={key}>
-                            <span className="ficha-label">{key}</span>
-                            <span className="ficha-value" title={item[key]}>{item[key]}</span>
+                            <span className="ficha-label">{key}:</span>
+                            <span className="ficha-value">{item[key]}</span>
                         </div>
                     ))}
                 </div>
@@ -450,11 +469,10 @@ export default function App() {
         let pageCounter = 1;
         const dateStr = new Date().toLocaleDateString('pt-BR');
 
+        // Ordenação inteligente
         const getSortKey = (item) => {
             const autor = (item['Autor/Desenvolvedor'] || '').trim();
-            if (autor && autor.toLowerCase() !== 'various') {
-                return autor;
-            }
+            if (autor && autor.toLowerCase() !== 'various') return autor;
             return (item['Título'] || '').trim();
         };
 
@@ -489,7 +507,7 @@ export default function App() {
             const cleanCatName = cat.substring(2);
             pages.push(<CoverPage key={`cover-${cat}`} title={cleanCatName} isMain={false} />);
             
-            // Limitado a 8 itens (4 linhas) para uso perfeito do espaço A4!
+            // Limitado a exatos 8 itens (4 linhas x 2 colunas) - Encaixa perfeito no grid com os novos tamanhos!
             const itemsPerPage = 8; 
             for (let i = 0; i < grouped[cat].length; i += itemsPerPage) {
                 const chunk = grouped[cat].slice(i, i + itemsPerPage);
@@ -571,15 +589,12 @@ export default function App() {
             const authorCount = {};
 
             csvData.forEach(item => {
-                // Suporte
                 const cat = getCategoryInfo(item['Tipo']).substring(2);
                 catCount[cat] = (catCount[cat] || 0) + 1;
                 
-                // Status
                 const stat = item['Status'] || 'Não Definido';
                 statusCount[stat] = (statusCount[stat] || 0) + 1;
 
-                // Ratings
                 let n = parseFloat((item['Nota'] || '0').replace(',', '.'));
                 if (n === 5) ratingCount['Nota 5']++;
                 else if (n >= 4) ratingCount['Nota 4']++;
@@ -588,22 +603,18 @@ export default function App() {
                 else if (n >= 1) ratingCount['Nota 1']++;
                 else ratingCount['S/ Nota']++;
 
-                // Authors
                 const author = (item['Autor/Desenvolvedor'] || '').trim();
                 if (author && author.toLowerCase() !== 'various') {
                     authorCount[author] = (authorCount[author] || 0) + 1;
                 }
             });
 
-            // Ordenando Top Autores
             const sortedAuthors = Object.entries(authorCount)
                 .sort((a, b) => b[1] - a[1])
                 .slice(0, 5);
 
-            // Cores Mondrian
             const palette = ['#00FFFF', '#FF007F', '#C5A059', '#222222', '#dddddd'];
 
-            // 1. Gráfico Tipos
             instances.push(new window.Chart(chartTypeRef.current, {
                 type: 'bar',
                 data: {
@@ -613,7 +624,6 @@ export default function App() {
                 options: { animation: false, responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
             }));
 
-            // 2. Gráfico Status
             instances.push(new window.Chart(chartStatusRef.current, {
                 type: 'doughnut',
                 data: {
@@ -623,7 +633,6 @@ export default function App() {
                 options: { animation: false, responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
             }));
 
-            // 3. Gráfico Notas
             instances.push(new window.Chart(chartRatingRef.current, {
                 type: 'bar',
                 data: {
@@ -633,7 +642,6 @@ export default function App() {
                 options: { animation: false, responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
             }));
 
-            // 4. Gráfico Top Autores
             instances.push(new window.Chart(chartAuthorRef.current, {
                 type: 'bar',
                 data: {
