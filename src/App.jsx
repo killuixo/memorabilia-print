@@ -75,10 +75,10 @@ const globalCSS = `
   }
   .floating-bar button.print-btn { background: var(--cyan); }
 
-  /* ------------- PÁGINA A4 COM REGRAS ESTRITAS ------------- */
+  /* ------------- PÁGINA A4 ------------- */
   .pdf-page {
       width: 210mm;
-      height: 297mm; /* Altura exata da A4 */
+      height: 297mm;
       background: var(--white);
       position: relative;
       padding: 20mm 15mm 20mm 15mm;
@@ -108,161 +108,139 @@ const globalCSS = `
   
   .cover-title { font-size: 3em; font-weight: 300; margin: 0 0 10px 0; letter-spacing: -1px; color: var(--gray); text-transform: uppercase; }
   .cover-owner { font-size: 4.5em; font-weight: 800; margin: 0; color: var(--black); line-height: 1; letter-spacing: -2px; }
-  .cover-meta { font-size: 1.2em; color: var(--gray); margin-top: 40px; background: white; display: inline-block; padding-right: 10px; }
+  .cover-meta { font-size: 1em; color: var(--gray); margin-top: 40px; }
 
   .mondrian-decor { position: absolute; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; z-index: 1; }
   .m-line-v { position: absolute; width: 4px; background: var(--black); top: 0; bottom: 0; }
   .m-line-h { position: absolute; height: 4px; background: var(--black); left: 0; right: 0; }
   .m-block { position: absolute; }
 
-  /* ------------- GRID DE ITENS ------------- */
+  /* ------------- COLUNAS FLUIDAS (MASONRY) ------------- */
   .catalog-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      column-gap: 15mm;
-      row-gap: 12mm;
+      column-count: 2;
+      column-gap: 12mm;
       height: 245mm;
-      align-content: start;
-      align-items: start; /* Permite que o item ocupe só a altura do próprio conteúdo */
+      display: block;
   }
 
-  /* ITEM FLUTUANTE (FLOAT) PARA TEXTO ABRAÇAR A IMAGEM */
+  /* O Item abraça seu conteúdo e usa page-break-inside avoid */
   .catalog-item {
       position: relative;
-      display: block; /* Block para permitir float dos filhos */
-      padding: 12px 12px 12px 15px;
-      margin-bottom: 5px;
-      border-left: 3px solid; /* Cor injetada no React */
+      display: inline-block; /* Vital para colunas não quebrarem o bloco */
+      width: 100%;
+      padding: 12px 14px;
+      margin-bottom: 6mm;
+      border-left: 4px solid var(--item-accent);
       background: var(--white);
+      border-radius: 4px;
       box-sizing: border-box;
       page-break-inside: avoid;
-      border-radius: 4px;
-      /* Sombra com mais contraste para todos os itens */
-      box-shadow: 2px 4px 12px rgba(0,0,0,0.12);
+      break-inside: avoid;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.1); 
   }
 
-  /* Destaque 5 Estrelas: Mais Sombra, Borda Grossa, Fundo Levemente Destacado */
+  /* Destaque 5 Estrelas */
   .catalog-item.star-5 {
-      border-left-width: 8px !important;
-      background: #fdfdfd;
+      border-left-width: 8px;
+      background: #fafafa;
       border-radius: 4px 8px 8px 4px;
-      /* Sombra super imponente e profunda */
-      box-shadow: 4px 8px 22px rgba(0,0,0,0.22);
+      box-shadow: 0 12px 30px rgba(0,0,0,0.25); /* Contraste ampliado */
   }
 
-  .item-code {
-      position: absolute;
-      top: 5px;
-      right: 5px;
-      font-size: 0.55em;
-      color: #ccc;
-      font-family: monospace;
-      z-index: 2;
-  }
-
-  .item-title { 
-      font-size: 1.1em; 
-      font-weight: 800; 
-      color: var(--black); 
-      line-height: 1.15; 
-      margin-bottom: 2px; 
-      padding-right: 40px; 
-  }
-  
-  .item-author { 
-      font-weight: 600; 
-      font-size: 0.9em; 
-      color: #444; 
-      margin-bottom: 8px; 
-  }
-  
-  .stars-container { margin-bottom: 8px; display: flex; gap: 2px; color: var(--gold); }
-  .star { width: 13px; height: 13px; }
-  .star-gradient { width: 24px; height: 24px; filter: drop-shadow(0px 2px 3px rgba(0,0,0,0.15)); margin-bottom: 4px; }
-
-  /* IMAGEM FLUTUANTE */
-  .item-cover-box {
-      float: left; /* O segredo para o texto fluir embaixo */
-      width: 90px;
-      height: 130px;
-      background: #f4f4f4;
-      border: 1px solid #e0e0e0;
-      border-radius: 4px;
-      overflow: hidden;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 2px 2px 6px rgba(0,0,0,0.08);
-      margin-right: 15px;
-      margin-bottom: 5px;
-  }
-
-  .item-cover-box img {
-      width: 100%;
-      height: 100%;
+  /* Imagem Flutuante (Otimiza todo o espaço branco) */
+  .item-cover-float {
+      float: left;
+      width: 80px;
+      height: 115px;
       object-fit: cover;
+      margin-right: 14px;
+      margin-bottom: 8px;
+      border-radius: 4px;
+      box-shadow: 2px 4px 10px rgba(0,0,0,0.15);
+      background: #eee;
   }
 
-  /* ------------- FICHA CATALOGRÁFICA ------------- */
-  .catalog-ficha {
-      font-size: 0.7em;
-      display: flex;
-      flex-direction: column;
-      gap: 3px;
-  }
-
-  .ficha-row {
-      display: flex;
-      flex-direction: row;
-      gap: 5px;
-      line-height: 1.3;
-  }
-
-  .ficha-label { 
-      font-weight: 600; 
-      color: var(--gray); 
-      white-space: nowrap; 
-      text-transform: uppercase; 
-      font-size: 0.85em; 
-  }
-  
-  .ficha-value { 
-      color: var(--black); 
-      font-weight: 500;
-  }
-
-  /* Para limpar o float no final do item */
+  /* Clearfix para o float não escapar */
   .catalog-item::after {
       content: "";
       display: table;
       clear: both;
   }
 
+  .item-code {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      font-size: 0.6em;
+      font-family: monospace;
+      font-weight: 800;
+      color: var(--item-accent);
+      letter-spacing: 0.5px;
+      z-index: 2;
+  }
+
+  .item-title { 
+      font-size: 1.15em; 
+      font-weight: 800; 
+      color: var(--item-accent); 
+      line-height: 1.15; 
+      margin-bottom: 4px; 
+      padding-right: 45px; 
+  }
+  
+  .item-author {
+      font-size: 0.95em;
+      font-weight: 700;
+      color: var(--item-accent);
+      margin-bottom: 8px;
+      line-height: 1.2;
+  }
+
+  .stars-container { margin-bottom: 10px; display: flex; gap: 2px; color: var(--gold); }
+  .star { width: 14px; height: 14px; }
+  
+  /* A Estrela Gigante em Degradê do 5 Estrelas */
+  .star-gradient { 
+      width: 28px; 
+      height: 28px; 
+      filter: drop-shadow(0px 3px 4px rgba(0,0,0,0.25)); 
+      margin-bottom: 10px; 
+      display: inline-block;
+  }
+
+  /* ------------- FICHA CATALOGRÁFICA ------------- */
+  .catalog-ficha {
+      font-size: 0.75em;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-top: 4px;
+  }
+
+  .ficha-row {
+      display: flex;
+      flex-direction: row;
+      gap: 6px;
+      line-height: 1.3;
+  }
+
+  .ficha-label { 
+      font-weight: 500; 
+      color: #999; 
+      text-transform: uppercase; 
+      font-size: 0.85em; 
+      white-space: nowrap; 
+  }
+  
+  .ficha-value { 
+      color: var(--black); 
+      font-weight: 700;
+  }
+
   /* ------------- DASHBOARD ESTATÍSTICAS ------------- */
-  .stats-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 20px;
-      width: 100%;
-  }
-
-  .chart-card {
-      background: var(--white);
-      border: 1px solid #eee;
-      border-radius: 8px;
-      padding: 15px;
-  }
-
-  .chart-card h3 {
-      font-size: 0.8em;
-      text-transform: uppercase;
-      color: var(--gray);
-      margin-top: 0;
-      margin-bottom: 15px;
-      text-align: center;
-      font-weight: 600;
-  }
-
+  .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; width: 100%; }
+  .chart-card { background: var(--white); border: 1px solid #eee; border-radius: 8px; padding: 15px; }
+  .chart-card h3 { font-size: 0.8em; text-transform: uppercase; color: var(--gray); margin-top: 0; margin-bottom: 15px; text-align: center; font-weight: 600; }
   .chart-container { height: 200px; width: 100%; }
 
   /* ------------- REGRAS DE IMPRESSÃO NATIVA ------------- */
@@ -274,13 +252,12 @@ const globalCSS = `
   }
 `;
 
-// Hook para carregar as bibliotecas (PapaParse e ChartJS)
 const useExternalScripts = () => {
     const [loaded, setLoaded] = useState(false);
     useEffect(() => {
-        const load = (src) => new Promise((res, resErr) => {
+        const load = (src) => new Promise((res, rej) => {
             if (document.querySelector(`script[src="${src}"]`)) return res();
-            const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = resErr; document.head.appendChild(s);
+            const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.head.appendChild(s);
         });
         Promise.all([
             load('https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js'),
@@ -290,7 +267,7 @@ const useExternalScripts = () => {
     return loaded;
 };
 
-// Ícones
+// Ícones de Avaliação
 const StarIcon = ({ filled }) => (
     <svg className="star" viewBox="0 0 24 24" fill={filled ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2">
         <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
@@ -326,10 +303,21 @@ const getCategoryInfo = (tipo) => {
     return '5 OUTROS';
 };
 
-// Alterna entre Pink, Ciano e Dourado para a borda
-const getAccentColor = (index) => {
-    const colors = ['var(--pink)', 'var(--cyan)', 'var(--gold)'];
-    return colors[index % colors.length];
+// Gera um Hash Estável baseado no Autor ou Título para manter a cor da Coleção (Série) igual
+const getHashColor = (str) => {
+    if (!str) return 'var(--black)';
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+        hash = str.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const colors = ['var(--cyan)', 'var(--pink)', 'var(--gold)'];
+    return colors[Math.abs(hash) % colors.length];
+};
+
+const getSortKey = (item) => {
+    const autor = (item['Autor/Desenvolvedor'] || '').trim();
+    if (autor && autor.toLowerCase() !== 'various') return autor;
+    return (item['Título'] || '').trim();
 };
 
 const StarRating = ({ nota }) => {
@@ -342,8 +330,9 @@ const StarRating = ({ nota }) => {
     return <div className="stars-container">{stars}</div>;
 };
 
-// Capa Mondrian com blocos geométricos
-const CoverPage = ({ title, isMain, ownerName, dateStr }) => {
+const CoverPage = ({ title, isMain, ownerName, dateStr, colorKey = 2 }) => {
+    const colors = ['var(--cyan)', 'var(--pink)', 'var(--gold)', 'var(--black)'];
+    const accent = colors[colorKey % colors.length];
     return (
         <div className="pdf-page">
             <div className="mondrian-decor">
@@ -374,58 +363,82 @@ const CoverPage = ({ title, isMain, ownerName, dateStr }) => {
     );
 };
 
-// COMPONENTE DO ITEM (Agora usa Float para texto envolver a imagem!)
-const ItemCard = ({ item, index }) => {
+const ItemCard = ({ item, cat }) => {
     let nota = parseFloat((item['Nota'] || '0').replace(',', '.'));
     if (isNaN(nota)) nota = 0;
     
     let isStar5 = nota === 5;
-    const borderColor = getAccentColor(index); // 5 estrelas mantêm o padrão de cor, só ganham borda mais grossa
-
-    const excludedKeys = ['ID', 'Código Arquivístico', 'Código de Barras', 'Descrição', 'URL da Capa', 'Título', 'Nota', 'Autor/Desenvolvedor'];
     
-    const fichaFields = Object.keys(item).filter(key => 
-        !excludedKeys.includes(key) && item[key] !== null && item[key] !== undefined && item[key].toString().trim() !== ''
-    );
+    // A cor agora é travada pelo Hash do SortKey (Agrupa Coleções e Autores na mesma cor!)
+    const baseKey = getSortKey(item);
+    const itemAccentColor = getHashColor(baseKey);
+
+    // Montador Inteligente de Ficha baseada na Categoria
+    const formatFicha = () => {
+        const f = [];
+        if (item['Tipo']) f.push({ l: 'TIPO', v: item['Tipo'] });
+        if (item['Ano']) f.push({ l: 'ANO', v: item['Ano'] });
+
+        const c = cat.substring(2).trim();
+
+        if (c === 'LIVROS') {
+            if (item['Editora/Gravadora']) f.push({ l: 'EDITORA', v: item['Editora/Gravadora'] });
+            if (item['Status']) f.push({ l: 'STATUS', v: item['Status'] });
+            if (item['Páginas/Tempo']) f.push({ l: 'PÁGINAS', v: item['Páginas/Tempo'] });
+        } else if (c === 'DISCOS') {
+            if (item['Editora/Gravadora']) f.push({ l: 'GRAVADORA', v: item['Editora/Gravadora'] });
+            // Ocultando o status nos discos
+            if (item['Páginas/Tempo']) f.push({ l: 'FAIXAS', v: item['Páginas/Tempo'] });
+        } else if (c === 'VÍDEO') {
+            if (item['Editora/Gravadora']) f.push({ l: 'PRODUTORA', v: item['Editora/Gravadora'] });
+            if (item['Status']) f.push({ l: 'STATUS', v: item['Status'] });
+            if (item['Páginas/Tempo']) f.push({ l: 'MINUTOS', v: item['Páginas/Tempo'] });
+        } else if (c === 'GAMES') {
+            // Em GAMES, Autor/Desenvolvedor fica no topo e mostramos Horas
+            if (item['Status']) f.push({ l: 'STATUS', v: item['Status'] });
+            if (item['Páginas/Tempo']) f.push({ l: 'HORAS', v: item['Páginas/Tempo'] });
+        } else {
+            // Fallback genérico
+            if (item['Editora/Gravadora']) f.push({ l: 'EDITORA/GRAVADORA', v: item['Editora/Gravadora'] });
+            if (item['Status']) f.push({ l: 'STATUS', v: item['Status'] });
+            if (item['Páginas/Tempo']) f.push({ l: 'PÁGINAS/TEMPO', v: item['Páginas/Tempo'] });
+        }
+        return f;
+    };
+
+    const fichaFields = formatFicha();
+    const authorName = item['Autor/Desenvolvedor'] && item['Autor/Desenvolvedor'].trim() !== '' ? item['Autor/Desenvolvedor'] : null;
 
     return (
-        <div className={`catalog-item ${isStar5 ? 'star-5' : ''}`} style={{ borderLeftColor: borderColor }}>
+        <div className={`catalog-item ${isStar5 ? 'star-5' : ''}`} style={{ '--item-accent': itemAccentColor }}>
+            
             {item['Código Arquivístico'] && (
                 <div className="item-code">{item['Código Arquivístico']}</div>
             )}
 
-            {/* Imagem Flutuando à esquerda */}
+            {/* Float Image: o texto abraça a capa e usa todo o espaço vazio abaixo! */}
             {item['URL da Capa'] && item['URL da Capa'].trim() !== '' && (
-                <div className="item-cover-box">
-                    <img 
-                        src={item['URL da Capa']} 
-                        alt="Capa" 
-                        crossOrigin="anonymous" 
-                        onError={(e) => { e.target.style.display = 'none'; e.target.parentNode.style.display = 'none'; }} 
-                    />
-                </div>
+                <img 
+                    className="item-cover-float"
+                    src={item['URL da Capa']} 
+                    alt="Capa" 
+                    crossOrigin="anonymous" 
+                    onError={(e) => { e.target.style.display = 'none'; }} 
+                />
             )}
 
-            {/* O texto fluirá aqui e, se passar da imagem, ocupará a largura toda embaixo */}
             <div className="item-title">{item['Título'] || 'Sem Título'}</div>
             
-            {/* O Autor ganhou destaque logo abaixo do título sem o rótulo chato */}
-            {item['Autor/Desenvolvedor'] && item['Autor/Desenvolvedor'].trim() !== '' && (
-                <div className="item-author">{item['Autor/Desenvolvedor']}</div>
-            )}
+            {authorName && <div className="item-author">{authorName}</div>}
             
-            {isStar5 ? (
-                <GradientStarIcon />
-            ) : (
-                (nota > 0) && <StarRating nota={nota} />
-            )}
+            {isStar5 ? <GradientStarIcon /> : ((nota > 0) && <StarRating nota={nota} />)}
 
             {fichaFields.length > 0 && (
                 <div className="catalog-ficha">
-                    {fichaFields.map(key => (
-                        <div className="ficha-row" key={key}>
-                            <span className="ficha-label">{key}:</span>
-                            <span className="ficha-value">{item[key]}</span>
+                    {fichaFields.map((f, i) => (
+                        <div className="ficha-row" key={i}>
+                            <span className="ficha-label">{f.l}:</span>
+                            <span className="ficha-value">{f.v}</span>
                         </div>
                     ))}
                 </div>
@@ -442,8 +455,6 @@ export default function App() {
     const [viewMode, setViewMode] = useState('upload'); 
     
     const fileInputRef = useRef(null);
-    
-    // Referências dos 4 gráficos
     const chartTypeRef = useRef(null);
     const chartStatusRef = useRef(null);
     const chartRatingRef = useRef(null);
@@ -468,13 +479,6 @@ export default function App() {
         let pageCounter = 1;
         const dateStr = new Date().toLocaleDateString('pt-BR');
 
-        // Ordenação inteligente
-        const getSortKey = (item) => {
-            const autor = (item['Autor/Desenvolvedor'] || '').trim();
-            if (autor && autor.toLowerCase() !== 'various') return autor;
-            return (item['Título'] || '').trim();
-        };
-
         const getDictLetter = (str) => {
             if (!str) return '?';
             const char = str.charAt(0).toUpperCase();
@@ -491,12 +495,11 @@ export default function App() {
         
         const sortedCategories = Object.keys(grouped).sort();
 
-        // 1. Capa Master
-        pages.push(<CoverPage key="main-cover" isMain={true} ownerName={ownerName} dateStr={dateStr} />);
+        pages.push(<CoverPage key="main-cover" title="Catálogo" isMain={true} ownerName={ownerName} dateStr={dateStr} colorKey={3} />);
 
-        // 2. Iterando pelas Categorias
-        sortedCategories.forEach((cat) => {
+        sortedCategories.forEach((cat, catIndex) => {
             
+            // Ordenação Natural e por Autor ou Título
             grouped[cat].sort((a, b) => {
                 const keyA = getSortKey(a);
                 const keyB = getSortKey(b);
@@ -504,18 +507,17 @@ export default function App() {
             });
             
             const cleanCatName = cat.substring(2);
-            pages.push(<CoverPage key={`cover-${cat}`} title={cleanCatName} isMain={false} />);
+            pages.push(<CoverPage key={`cover-${cat}`} title={cleanCatName} colorKey={catIndex} />);
             
-            // Limitado a exatos 8 itens (4 linhas x 2 colunas) - Encaixa perfeito no grid com os novos tamanhos!
+            // O layout em colunas lida bem com itens variados, 8-10 é ideal
             const itemsPerPage = 8; 
             for (let i = 0; i < grouped[cat].length; i += itemsPerPage) {
                 const chunk = grouped[cat].slice(i, i + itemsPerPage);
                 
-                const firstKey = getSortKey(chunk[0]);
-                const lastKey = getSortKey(chunk[chunk.length - 1]);
-                
-                const firstLetter = getDictLetter(firstKey);
-                const lastLetter = getDictLetter(lastKey);
+                const firstTitle = getSortKey(chunk[0]);
+                const lastTitle = getSortKey(chunk[chunk.length - 1]);
+                const firstLetter = getDictLetter(firstTitle);
+                const lastLetter = getDictLetter(lastTitle);
                 const dictStr = firstLetter === lastLetter ? firstLetter : `${firstLetter} - ${lastLetter}`;
                 const currentPage = pageCounter;
 
@@ -528,7 +530,7 @@ export default function App() {
                         
                         <div className="catalog-grid">
                             {chunk.map((item, idx) => (
-                                <ItemCard key={`item-${currentPage}-${idx}`} item={item} index={idx} />
+                                <ItemCard key={`item-${currentPage}-${idx}`} item={item} cat={cat} />
                             ))}
                         </div>
                         
@@ -542,12 +544,11 @@ export default function App() {
             }
         });
 
-        // 3. Página de Estatísticas (Com grid 2x2)
+        // 3. Página de Estatísticas
         pages.push(
             <div className="pdf-page" key="stats-page">
                 <div className="page-header"><span>Estatísticas</span><span>Visão Geral</span></div>
-                
-                <h2 style={{ fontWeight: 300, fontSize: '2em', marginBottom: '30px', marginTop: '10px' }}>Visão Geral do Acervo</h2>
+                <h2 style={{ fontWeight: 300, fontSize: '2em', marginBottom: '30px', marginTop: '10px' }}>Visão Geral</h2>
                 
                 <div className="stats-grid">
                     <div className="chart-card">
@@ -563,7 +564,7 @@ export default function App() {
                         <div className="chart-container"><canvas ref={chartRatingRef}></canvas></div>
                     </div>
                     <div className="chart-card">
-                        <h3>Top 5 Autores/Desenvolvedores</h3>
+                        <h3>Top 5 Autores/Desenvolvedoras</h3>
                         <div className="chart-container"><canvas ref={chartAuthorRef}></canvas></div>
                     </div>
                 </div>
@@ -616,37 +617,25 @@ export default function App() {
 
             instances.push(new window.Chart(chartTypeRef.current, {
                 type: 'bar',
-                data: {
-                    labels: Object.keys(catCount),
-                    datasets: [{ label: 'Itens', data: Object.values(catCount), backgroundColor: palette, borderRadius: 4 }]
-                },
+                data: { labels: Object.keys(catCount), datasets: [{ label: 'Itens', data: Object.values(catCount), backgroundColor: palette, borderRadius: 4 }] },
                 options: { animation: false, responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
             }));
 
             instances.push(new window.Chart(chartStatusRef.current, {
                 type: 'doughnut',
-                data: {
-                    labels: Object.keys(statusCount),
-                    datasets: [{ data: Object.values(statusCount), backgroundColor: ['#222222', '#C5A059', '#FF007F', '#00FFFF', '#eeeeee'], borderWidth: 0 }]
-                },
+                data: { labels: Object.keys(statusCount), datasets: [{ data: Object.values(statusCount), backgroundColor: ['#222222', '#C5A059', '#FF007F', '#00FFFF', '#eeeeee'], borderWidth: 0 }] },
                 options: { animation: false, responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
             }));
 
             instances.push(new window.Chart(chartRatingRef.current, {
                 type: 'bar',
-                data: {
-                    labels: Object.keys(ratingCount),
-                    datasets: [{ label: 'Qtd', data: Object.values(ratingCount), backgroundColor: '#C5A059', borderRadius: 4 }]
-                },
+                data: { labels: Object.keys(ratingCount), datasets: [{ label: 'Qtd', data: Object.values(ratingCount), backgroundColor: '#C5A059', borderRadius: 4 }] },
                 options: { animation: false, responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
             }));
 
             instances.push(new window.Chart(chartAuthorRef.current, {
                 type: 'bar',
-                data: {
-                    labels: sortedAuthors.map(a => a[0].length > 15 ? a[0].substring(0, 15) + '...' : a[0]),
-                    datasets: [{ label: 'Qtd', data: sortedAuthors.map(a => a[1]), backgroundColor: '#FF007F', borderRadius: 4 }]
-                },
+                data: { labels: sortedAuthors.map(a => a[0].length > 15 ? a[0].substring(0, 15) + '...' : a[0]), datasets: [{ label: 'Qtd', data: sortedAuthors.map(a => a[1]), backgroundColor: '#FF007F', borderRadius: 4 }] },
                 options: { indexAxis: 'y', animation: false, responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
             }));
         }
