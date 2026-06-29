@@ -2,9 +2,9 @@ import React, { useState, useRef, useEffect, useMemo } from 'react';
 
 const globalCSS = `
   :root {
-      --pink: #FF007F;
-      --cyan: #00FFFF;
-      --gold: #C5A059;
+      --pink: #E60073;
+      --cyan: #008B8B; /* Ciano escurecido para máxima legibilidade */
+      --gold: #B8860B;
       --black: #222222;
       --gray: #777777;
       --light-gray: #F9F9F9;
@@ -23,28 +23,17 @@ const globalCSS = `
 
   /* ------------- INTERFACE DE USUÁRIO (TELA INICIAL) ------------- */
   .app-ui {
-      max-width: 600px;
-      margin: 10vh auto;
-      background: var(--white);
-      padding: 40px;
-      border-radius: 12px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      max-width: 600px; margin: 10vh auto; background: var(--white);
+      padding: 40px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);
   }
 
   .app-ui h1 { font-weight: 300; font-size: 2em; margin-top: 0; color: var(--black); letter-spacing: -1px; }
   .app-ui p { color: var(--gray); line-height: 1.6; }
 
   .upload-area {
-      border: 1px dashed #ccc;
-      border-radius: 8px;
-      padding: 40px;
-      text-align: center;
-      cursor: pointer;
-      margin: 30px 0;
-      background: var(--light-gray);
-      transition: 0.2s;
+      border: 1px dashed #ccc; border-radius: 8px; padding: 40px; text-align: center;
+      cursor: pointer; margin: 30px 0; background: var(--light-gray); transition: 0.2s;
   }
-  
   .upload-area:hover { border-color: var(--cyan); background: #f0ffff; }
 
   button.primary-btn {
@@ -55,37 +44,24 @@ const globalCSS = `
   button.primary-btn:disabled { background: #d0d0d0; cursor: not-allowed; }
 
   /* ------------- VISUALIZADOR DE PDF ------------- */
-  .preview-wrapper {
-      padding: 40px 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 30px;
-  }
+  .preview-wrapper { padding: 40px 0; display: flex; flex-direction: column; align-items: center; gap: 30px; }
 
   .floating-bar {
       position: fixed; top: 20px; right: 20px; background: rgba(0,0,0,0.8);
       padding: 15px 25px; border-radius: 50px; z-index: 1000;
       display: flex; gap: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);
   }
-  
   .floating-bar button {
       background: white; color: black; border: none; padding: 10px 20px;
       border-radius: 20px; font-weight: bold; cursor: pointer;
   }
-  .floating-bar button.print-btn { background: var(--cyan); }
+  .floating-bar button.print-btn { background: var(--cyan); color: white; }
 
   /* ------------- PÁGINA A4 ------------- */
   .pdf-page {
-      width: 210mm;
-      height: 297mm;
-      background: var(--white);
-      position: relative;
-      padding: 20mm 15mm 20mm 15mm;
-      box-sizing: border-box;
-      overflow: hidden;
-      page-break-after: always;
-      box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+      width: 210mm; height: 297mm; background: var(--white); position: relative;
+      padding: 20mm 15mm 20mm 15mm; box-sizing: border-box; overflow: hidden;
+      page-break-after: always; box-shadow: 0 5px 20px rgba(0,0,0,0.15);
   }
 
   .page-header {
@@ -105,7 +81,6 @@ const globalCSS = `
       display: flex; flex-direction: column; justify-content: center; 
       height: 100%; padding-left: 15mm; position: relative; z-index: 10;
   }
-  
   .cover-title { font-size: 3em; font-weight: 300; margin: 0 0 10px 0; letter-spacing: -1px; color: var(--gray); text-transform: uppercase; }
   .cover-owner { font-size: 4.5em; font-weight: 800; margin: 0; color: var(--black); line-height: 1; letter-spacing: -2px; }
   .cover-meta { font-size: 1em; color: var(--gray); margin-top: 40px; }
@@ -115,127 +90,70 @@ const globalCSS = `
   .m-line-h { position: absolute; height: 4px; background: var(--black); left: 0; right: 0; }
   .m-block { position: absolute; }
 
-  /* ------------- COLUNAS FLUIDAS (MASONRY) ------------- */
+  /* ------------- GRID MASONRY (ASSIMÉTRICO) ------------- */
   .catalog-grid {
       column-count: 2;
       column-gap: 12mm;
-      height: 245mm;
+      height: 245mm; /* Limite cravado para não estourar cabeçalho/rodapé */
       display: block;
   }
 
-  /* O Item abraça seu conteúdo e usa page-break-inside avoid */
   .catalog-item {
       position: relative;
-      display: inline-block; /* Vital para colunas não quebrarem o bloco */
+      display: inline-block; /* Vital para o masonry funcionar perfeitamente nas quebras */
       width: 100%;
-      padding: 12px 14px;
-      margin-bottom: 6mm;
-      border-left: 4px solid var(--item-accent);
+      padding: 15px;
+      margin-bottom: 8mm; /* Respiro entre as caixas */
       background: var(--white);
+      border-left: 4px solid var(--item-accent);
       border-radius: 4px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.06); /* Sombra elegante */
       box-sizing: border-box;
       page-break-inside: avoid;
       break-inside: avoid;
-      box-shadow: 0 6px 16px rgba(0,0,0,0.1); 
   }
 
-  /* Destaque 5 Estrelas */
+  /* Alto Contraste para 5 Estrelas */
   .catalog-item.star-5 {
       border-left-width: 8px;
-      background: #fafafa;
+      background-color: #fafafa;
       border-radius: 4px 8px 8px 4px;
-      box-shadow: 0 12px 30px rgba(0,0,0,0.25); /* Contraste ampliado */
+      box-shadow: 0 12px 28px rgba(0,0,0,0.25); /* Sombra agressiva de destaque */
   }
 
-  /* Imagem Flutuante (Otimiza todo o espaço branco) */
+  /* ------------- IMAGEM FLUTUANTE ------------- */
   .item-cover-float {
       float: left;
-      width: 80px;
-      height: 115px;
+      width: 75px;
+      height: 110px;
       object-fit: cover;
       margin-right: 14px;
-      margin-bottom: 8px;
-      border-radius: 4px;
-      box-shadow: 2px 4px 10px rgba(0,0,0,0.15);
-      background: #eee;
+      margin-bottom: 6px;
+      border-radius: 3px;
+      box-shadow: 1px 2px 6px rgba(0,0,0,0.15);
+      background: #f0f0f0;
   }
 
-  /* Clearfix para o float não escapar */
-  .catalog-item::after {
-      content: "";
-      display: table;
-      clear: both;
-  }
+  /* Clearfix nativo para floats */
+  .catalog-item::after { content: ""; display: table; clear: both; }
 
-  .item-code {
-      position: absolute;
-      top: 12px;
-      right: 12px;
-      font-size: 0.6em;
-      font-family: monospace;
-      font-weight: 800;
-      color: var(--code-color);
-      letter-spacing: 0.5px;
-      z-index: 2;
-  }
-
-  .item-title { 
-      font-size: 1.15em; 
-      font-weight: 800; 
-      color: var(--title-color); 
-      line-height: 1.15; 
-      margin-bottom: 4px; 
-      padding-right: 45px; 
-  }
+  /* ------------- TEXTOS NEUTROS ------------- */
+  .item-header-row { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2px; }
+  .item-title { font-size: 1.1em; font-weight: 800; color: var(--black); line-height: 1.15; flex: 1; padding-right: 10px; }
+  .item-code { font-size: 0.6em; color: var(--gray); font-family: monospace; font-weight: 800; white-space: nowrap; margin-top: 2px; }
   
-  .item-author {
-      font-size: 0.95em;
-      font-weight: 700;
-      color: var(--item-accent);
-      margin-bottom: 8px;
-      line-height: 1.2;
-  }
+  /* Autor Colorido */
+  .item-author { font-size: 0.95em; font-weight: 800; margin-bottom: 8px; line-height: 1.2; }
 
-  .stars-container { margin-bottom: 10px; display: flex; gap: 2px; color: var(--gold); }
+  .stars-container { margin-bottom: 10px; display: flex; gap: 2px; }
   .star { width: 14px; height: 14px; }
-  
-  /* A Estrela Gigante em Degradê do 5 Estrelas */
-  .star-gradient { 
-      width: 28px; 
-      height: 28px; 
-      filter: drop-shadow(0px 3px 4px rgba(0,0,0,0.25)); 
-      margin-bottom: 10px; 
-      display: inline-block;
-  }
+  .star-gradient { width: 28px; height: 28px; filter: drop-shadow(0px 3px 4px rgba(0,0,0,0.25)); margin-bottom: 6px; display: block; }
 
   /* ------------- FICHA CATALOGRÁFICA ------------- */
-  .catalog-ficha {
-      font-size: 0.75em;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      margin-top: 4px;
-  }
-
-  .ficha-row {
-      display: flex;
-      flex-direction: row;
-      gap: 6px;
-      line-height: 1.3;
-  }
-
-  .ficha-label { 
-      font-weight: 500; 
-      color: #999; 
-      text-transform: uppercase; 
-      font-size: 0.85em; 
-      white-space: nowrap; 
-  }
-  
-  .ficha-value { 
-      color: var(--black); 
-      font-weight: 700;
-  }
+  .catalog-ficha { font-size: 0.7em; display: flex; flex-direction: column; gap: 4px; margin-top: 4px; }
+  .ficha-row { display: flex; flex-direction: row; gap: 6px; line-height: 1.3; }
+  .ficha-label { font-weight: 500; color: #999; text-transform: uppercase; font-size: 0.85em; white-space: nowrap; }
+  .ficha-value { color: var(--black); font-weight: 700; }
 
   /* ------------- DASHBOARD ESTATÍSTICAS ------------- */
   .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; width: 100%; }
@@ -243,7 +161,6 @@ const globalCSS = `
   .chart-card h3 { font-size: 0.8em; text-transform: uppercase; color: var(--gray); margin-top: 0; margin-bottom: 15px; text-align: center; font-weight: 600; }
   .chart-container { height: 200px; width: 100%; }
 
-  /* ------------- REGRAS DE IMPRESSÃO NATIVA ------------- */
   @media print {
       body { background-color: var(--white) !important; margin: 0; padding: 0; }
       .no-print { display: none !important; }
@@ -267,30 +184,22 @@ const useExternalScripts = () => {
     return loaded;
 };
 
-// Ícones de Avaliação
-const StarIcon = ({ filled }) => (
-    <svg className="star" viewBox="0 0 24 24" fill={filled ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2">
+// Ícones dinâmicos
+const StarIcon = ({ filled, color }) => (
+    <svg className="star" viewBox="0 0 24 24" fill={filled ? color : "none"} stroke={color} strokeWidth="2">
         <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
     </svg>
 );
 
-const HalfStarIcon = () => (
-    <svg className="star" viewBox="0 0 24 24" fill="url(#half)">
-        <defs><linearGradient id="half"><stop offset="50%" stopColor="currentColor"/><stop offset="50%" stopColor="transparent"/></linearGradient></defs>
-        <path stroke="currentColor" strokeWidth="2" d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+const HalfStarIcon = ({ colorId, colorHex }) => (
+    <svg className="star" viewBox="0 0 24 24" fill={`url(#half-${colorId})`} stroke={colorHex} strokeWidth="2">
+        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
     </svg>
 );
 
 const GradientStarIcon = () => (
     <svg className="star-gradient" viewBox="0 0 24 24" stroke="none">
-        <defs>
-            <linearGradient id="grad-star" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="var(--pink)" />
-                <stop offset="50%" stopColor="var(--cyan)" />
-                <stop offset="100%" stopColor="var(--gold)" />
-            </linearGradient>
-        </defs>
-        <path fill="url(#grad-star)" d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+        <path fill="url(#grad-star-5)" d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
     </svg>
 );
 
@@ -303,7 +212,12 @@ const getCategoryInfo = (tipo) => {
     return '5 OUTROS';
 };
 
-// Gera um Hash Estável baseado no Autor ou Título para manter a cor da Coleção (Série) igual
+const getSortKey = (item) => {
+    const autor = (item['Autor/Desenvolvedor'] || '').trim();
+    if (autor && autor.toLowerCase() !== 'various') return autor;
+    return (item['Título'] || '').trim();
+};
+
 const getHashIndex = (str) => {
     if (!str) return 0;
     let hash = 0;
@@ -313,18 +227,21 @@ const getHashIndex = (str) => {
     return Math.abs(hash);
 };
 
-const getSortKey = (item) => {
-    const autor = (item['Autor/Desenvolvedor'] || '').trim();
-    if (autor && autor.toLowerCase() !== 'various') return autor;
-    return (item['Título'] || '').trim();
-};
-
 const StarRating = ({ nota }) => {
+    if (nota === 5) return <div className="stars-container"><GradientStarIcon /></div>;
+
+    let colorHex = '#ccc';
+    let colorId = 'gray';
+
+    if (nota > 0 && nota <= 2) { colorHex = 'var(--gold)'; colorId = 'gold'; }
+    else if (nota > 2 && nota <= 3) { colorHex = 'var(--cyan)'; colorId = 'cyan'; }
+    else if (nota > 3 && nota < 5) { colorHex = 'var(--pink)'; colorId = 'pink'; }
+
     const stars = [];
     for (let i = 1; i <= 5; i++) {
-        if (nota >= i) stars.push(<StarIcon key={i} filled={true} />);
-        else if (nota >= i - 0.5) stars.push(<HalfStarIcon key={i} />);
-        else stars.push(<StarIcon key={i} filled={false} />);
+        if (nota >= i) stars.push(<StarIcon key={i} filled={true} color={colorHex} />);
+        else if (nota >= i - 0.5) stars.push(<HalfStarIcon key={i} colorId={colorId} colorHex={colorHex} />);
+        else stars.push(<StarIcon key={i} filled={false} color="#ccc" />);
     }
     return <div className="stars-container">{stars}</div>;
 };
@@ -368,16 +285,13 @@ const ItemCard = ({ item, cat }) => {
     
     let isStar5 = nota === 5;
     
-    // A cor agora é distribuída entre Borda/Autor, Título e Código garantindo uso das 3 cores
+    // A borda e o Autor usam a mesma cor para manter coesão da coleção
     const baseKey = getSortKey(item);
     const hIndex = getHashIndex(baseKey);
     const palette = ['var(--cyan)', 'var(--pink)', 'var(--gold)'];
+    const accentColor = palette[hIndex % 3];
 
-    const colorBorderAuthor = palette[hIndex % 3];
-    const colorTitle = palette[(hIndex + 1) % 3];
-    const colorCode = palette[(hIndex + 2) % 3];
-
-    // Montador Inteligente de Ficha baseada na Categoria
+    // Lógica da Ficha Dinâmica com base no tipo
     const formatFicha = () => {
         const f = [];
         if (item['Tipo']) f.push({ l: 'TIPO', v: item['Tipo'] });
@@ -391,21 +305,20 @@ const ItemCard = ({ item, cat }) => {
             if (item['Páginas/Tempo']) f.push({ l: 'PÁGINAS', v: item['Páginas/Tempo'] });
         } else if (c === 'DISCOS') {
             if (item['Editora/Gravadora']) f.push({ l: 'GRAVADORA', v: item['Editora/Gravadora'] });
-            // Ocultando o status nos discos
             if (item['Páginas/Tempo']) f.push({ l: 'FAIXAS', v: item['Páginas/Tempo'] });
+            // Sem status para discos
+        } else if (c === 'GAMES') {
+            if (item['Status']) f.push({ l: 'STATUS', v: item['Status'] });
+            if (item['Páginas/Tempo']) f.push({ l: 'HORAS', v: item['Páginas/Tempo'] });
         } else if (c === 'VÍDEO') {
             if (item['Editora/Gravadora']) f.push({ l: 'PRODUTORA', v: item['Editora/Gravadora'] });
             if (item['Status']) f.push({ l: 'STATUS', v: item['Status'] });
             if (item['Páginas/Tempo']) f.push({ l: 'MINUTOS', v: item['Páginas/Tempo'] });
-        } else if (c === 'GAMES') {
-            // Em GAMES, Autor/Desenvolvedor fica no topo e mostramos Horas
-            if (item['Status']) f.push({ l: 'STATUS', v: item['Status'] });
-            if (item['Páginas/Tempo']) f.push({ l: 'HORAS', v: item['Páginas/Tempo'] });
         } else {
-            // Fallback genérico
-            if (item['Editora/Gravadora']) f.push({ l: 'EDITORA/GRAVADORA', v: item['Editora/Gravadora'] });
+            // Fallback
+            if (item['Editora/Gravadora']) f.push({ l: 'EDITORA', v: item['Editora/Gravadora'] });
             if (item['Status']) f.push({ l: 'STATUS', v: item['Status'] });
-            if (item['Páginas/Tempo']) f.push({ l: 'PÁGINAS/TEMPO', v: item['Páginas/Tempo'] });
+            if (item['Páginas/Tempo']) f.push({ l: 'TEMPO/PÁG', v: item['Páginas/Tempo'] });
         }
         return f;
     };
@@ -414,17 +327,20 @@ const ItemCard = ({ item, cat }) => {
     const authorName = item['Autor/Desenvolvedor'] && item['Autor/Desenvolvedor'].trim() !== '' ? item['Autor/Desenvolvedor'] : null;
 
     return (
-        <div className={`catalog-item ${isStar5 ? 'star-5' : ''}`} style={{ 
-            '--item-accent': colorBorderAuthor,
-            '--title-color': colorTitle,
-            '--code-color': colorCode
-        }}>
+        <div className={`catalog-item ${isStar5 ? 'star-5' : ''}`} style={{ '--item-accent': accentColor }}>
             
-            {item['Código Arquivístico'] && (
-                <div className="item-code">{item['Código Arquivístico']}</div>
+            <div className="item-header-row">
+                <div className="item-title">{item['Título'] || 'Sem Título'}</div>
+                {item['Código Arquivístico'] && (
+                    <div className="item-code">{item['Código Arquivístico']}</div>
+                )}
+            </div>
+            
+            {authorName && (
+                <div className="item-author" style={{ color: accentColor }}>{authorName}</div>
             )}
 
-            {/* Float Image: o texto abraça a capa e usa todo o espaço vazio abaixo! */}
+            {/* Imagem em Float faz com que todo o texto restante envolva a capa, evitando espaços brancos */}
             {item['URL da Capa'] && item['URL da Capa'].trim() !== '' && (
                 <img 
                     className="item-cover-float"
@@ -435,11 +351,7 @@ const ItemCard = ({ item, cat }) => {
                 />
             )}
 
-            <div className="item-title">{item['Título'] || 'Sem Título'}</div>
-            
-            {authorName && <div className="item-author">{authorName}</div>}
-            
-            {isStar5 ? <GradientStarIcon /> : ((nota > 0) && <StarRating nota={nota} />)}
+            <StarRating nota={nota} />
 
             {fichaFields.length > 0 && (
                 <div className="catalog-ficha">
@@ -490,7 +402,7 @@ export default function App() {
         const getDictLetter = (str) => {
             if (!str) return '?';
             const char = str.charAt(0).toUpperCase();
-            if (/[0-9]/.test(char)) return '#';
+            if (/[0-9]/.test(char)) return '#'; // Letras antes de números no dicionário
             return char;
         };
 
@@ -507,25 +419,32 @@ export default function App() {
 
         sortedCategories.forEach((cat, catIndex) => {
             
-            // Ordenação Natural e por Autor ou Título
+            // Ordenação Alfabética Natural Múltipla (Autor -> Título -> Ano)
             grouped[cat].sort((a, b) => {
                 const keyA = getSortKey(a);
                 const keyB = getSortKey(b);
-                return keyA.localeCompare(keyB, 'pt', { numeric: true, sensitivity: 'base' });
+                let cmp = keyA.localeCompare(keyB, 'pt', { numeric: true, sensitivity: 'base' });
+                if (cmp !== 0) return cmp;
+                
+                const titleA = (a['Título'] || '').trim();
+                const titleB = (b['Título'] || '').trim();
+                return titleA.localeCompare(titleB, 'pt', { numeric: true, sensitivity: 'base' });
             });
             
             const cleanCatName = cat.substring(2);
             pages.push(<CoverPage key={`cover-${cat}`} title={cleanCatName} colorKey={catIndex} />);
             
-            // O layout em colunas lida bem com itens variados, 8-10 é ideal
+            // O Masonry Layout empacota melhor. Definimos 8 por página por precaução (4 linhas), 
+            // e o `column-count` ajeita a altura assimétrica.
             const itemsPerPage = 8; 
             for (let i = 0; i < grouped[cat].length; i += itemsPerPage) {
                 const chunk = grouped[cat].slice(i, i + itemsPerPage);
                 
-                const firstTitle = getSortKey(chunk[0]);
-                const lastTitle = getSortKey(chunk[chunk.length - 1]);
-                const firstLetter = getDictLetter(firstTitle);
-                const lastLetter = getDictLetter(lastTitle);
+                const firstKey = getSortKey(chunk[0]);
+                const lastKey = getSortKey(chunk[chunk.length - 1]);
+                
+                const firstLetter = getDictLetter(firstKey);
+                const lastLetter = getDictLetter(lastKey);
                 const dictStr = firstLetter === lastLetter ? firstLetter : `${firstLetter} - ${lastLetter}`;
                 const currentPage = pageCounter;
 
@@ -552,7 +471,6 @@ export default function App() {
             }
         });
 
-        // 3. Página de Estatísticas
         pages.push(
             <div className="pdf-page" key="stats-page">
                 <div className="page-header"><span>Estatísticas</span><span>Visão Geral</span></div>
@@ -621,7 +539,7 @@ export default function App() {
                 .sort((a, b) => b[1] - a[1])
                 .slice(0, 5);
 
-            const palette = ['#00FFFF', '#FF007F', '#C5A059', '#222222', '#dddddd'];
+            const palette = ['#008B8B', '#E60073', '#B8860B', '#222222', '#dddddd'];
 
             instances.push(new window.Chart(chartTypeRef.current, {
                 type: 'bar',
@@ -631,19 +549,19 @@ export default function App() {
 
             instances.push(new window.Chart(chartStatusRef.current, {
                 type: 'doughnut',
-                data: { labels: Object.keys(statusCount), datasets: [{ data: Object.values(statusCount), backgroundColor: ['#222222', '#C5A059', '#FF007F', '#00FFFF', '#eeeeee'], borderWidth: 0 }] },
+                data: { labels: Object.keys(statusCount), datasets: [{ data: Object.values(statusCount), backgroundColor: ['#222222', '#B8860B', '#E60073', '#008B8B', '#eeeeee'], borderWidth: 0 }] },
                 options: { animation: false, responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
             }));
 
             instances.push(new window.Chart(chartRatingRef.current, {
                 type: 'bar',
-                data: { labels: Object.keys(ratingCount), datasets: [{ label: 'Qtd', data: Object.values(ratingCount), backgroundColor: '#C5A059', borderRadius: 4 }] },
+                data: { labels: Object.keys(ratingCount), datasets: [{ label: 'Qtd', data: Object.values(ratingCount), backgroundColor: '#B8860B', borderRadius: 4 }] },
                 options: { animation: false, responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
             }));
 
             instances.push(new window.Chart(chartAuthorRef.current, {
                 type: 'bar',
-                data: { labels: sortedAuthors.map(a => a[0].length > 15 ? a[0].substring(0, 15) + '...' : a[0]), datasets: [{ label: 'Qtd', data: sortedAuthors.map(a => a[1]), backgroundColor: '#FF007F', borderRadius: 4 }] },
+                data: { labels: sortedAuthors.map(a => a[0].length > 15 ? a[0].substring(0, 15) + '...' : a[0]), datasets: [{ label: 'Qtd', data: sortedAuthors.map(a => a[1]), backgroundColor: '#E60073', borderRadius: 4 }] },
                 options: { indexAxis: 'y', animation: false, responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
             }));
         }
@@ -662,6 +580,21 @@ export default function App() {
     return (
         <>
             <style dangerouslySetInnerHTML={{ __html: globalCSS }} />
+            
+            {/* Definições GLOBAIS de SVG para as notas de estrela */}
+            <svg width="0" height="0" style={{ position: 'absolute' }}>
+                <defs>
+                    <linearGradient id="half-gold"><stop offset="50%" stopColor="var(--gold)"/><stop offset="50%" stopColor="transparent"/></linearGradient>
+                    <linearGradient id="half-cyan"><stop offset="50%" stopColor="var(--cyan)"/><stop offset="50%" stopColor="transparent"/></linearGradient>
+                    <linearGradient id="half-pink"><stop offset="50%" stopColor="var(--pink)"/><stop offset="50%" stopColor="transparent"/></linearGradient>
+                    <linearGradient id="half-gray"><stop offset="50%" stopColor="#ccc"/><stop offset="50%" stopColor="transparent"/></linearGradient>
+                    <linearGradient id="grad-star-5" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor="var(--pink)" />
+                        <stop offset="50%" stopColor="var(--cyan)" />
+                        <stop offset="100%" stopColor="var(--gold)" />
+                    </linearGradient>
+                </defs>
+            </svg>
 
             {viewMode === 'upload' && (
                 <div className="app-ui no-print">
