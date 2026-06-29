@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 
-// CSS com as regras estritas de impressão nativa (@media print)
 const globalCSS = `
   :root {
       --pink: #FF007F;
@@ -76,7 +75,7 @@ const globalCSS = `
   }
   .floating-bar button.print-btn { background: var(--cyan); }
 
-  /* ------------- PÁGINA A4 ------------- */
+  /* ------------- PÁGINA A4 COM REGRAS ESTRITAS ------------- */
   .pdf-page {
       width: 210mm;
       height: 297mm; /* Altura exata da A4 */
@@ -279,9 +278,9 @@ const globalCSS = `
 const useExternalScripts = () => {
     const [loaded, setLoaded] = useState(false);
     useEffect(() => {
-        const load = (src) => new Promise((res, rej) => {
+        const load = (src) => new Promise((res, resErr) => {
             if (document.querySelector(`script[src="${src}"]`)) return res();
-            const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.head.appendChild(s);
+            const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = resErr; document.head.appendChild(s);
         });
         Promise.all([
             load('https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js'),
