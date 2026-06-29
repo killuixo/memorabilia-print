@@ -1,6 +1,9 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 
+// CSS com as regras estritas de impressão nativa (@media print)
 const globalCSS = `
+  @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
+
   :root {
       --pink: #E60073;
       --cyan: #008B8B; /* Ciano escurecido para máxima legibilidade */
@@ -85,32 +88,35 @@ const globalCSS = `
   .cover-owner { font-size: 4.5em; font-weight: 800; margin: 0; color: var(--black); line-height: 1; letter-spacing: -2px; }
   .cover-meta { font-size: 1em; color: var(--gray); margin-top: 40px; }
 
+  /* Título especial VCR para Capas de Categoria */
+  .vcr-title { font-family: 'VT323', monospace; font-size: 6em; font-weight: normal; margin: 0; line-height: 1; letter-spacing: 2px; }
+
   .mondrian-decor { position: absolute; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; z-index: 1; }
   .m-line-v { position: absolute; width: 4px; background: var(--black); top: 0; bottom: 0; }
   .m-line-h { position: absolute; height: 4px; background: var(--black); left: 0; right: 0; }
   .m-block { position: absolute; }
 
-  /* ------------- GRID MASONRY (ASSIMÉTRICO) ------------- */
+  /* ------------- GRID DE ITENS (ESQUERDA PARA DIREITA) ------------- */
   .catalog-grid {
-      column-count: 2;
-      column-gap: 12mm;
-      height: 245mm; /* Limite cravado para não estourar cabeçalho/rodapé */
-      display: block;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      column-gap: 10mm;
+      row-gap: 8mm; /* Espaço otimizado para caber 8 perfeitamente */
+      height: 245mm;
+      align-content: start; /* Empilha de cima para baixo coladinhos */
   }
 
   .catalog-item {
       position: relative;
-      display: inline-block; /* Vital para o masonry funcionar perfeitamente nas quebras */
-      width: 100%;
-      padding: 15px;
-      margin-bottom: 8mm; /* Respiro entre as caixas */
+      display: block; /* Voltou para block para o Float da imagem funcionar perfeito */
+      padding: 12px;
       background: var(--white);
       border-left: 4px solid var(--item-accent);
       border-radius: 4px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.06); /* Sombra elegante */
+      box-shadow: 0 4px 15px rgba(0,0,0,0.06); /* Mais contraste nativo */
       box-sizing: border-box;
-      page-break-inside: avoid;
-      break-inside: avoid;
+      height: 57mm; /* Trava altura exata para 4 linhas em A4 */
+      overflow: hidden;
   }
 
   /* Alto Contraste para 5 Estrelas */
@@ -118,31 +124,28 @@ const globalCSS = `
       border-left-width: 8px;
       background-color: #fafafa;
       border-radius: 4px 8px 8px 4px;
-      box-shadow: 0 12px 28px rgba(0,0,0,0.25); /* Sombra agressiva de destaque */
+      box-shadow: 0 8px 24px rgba(0,0,0,0.18); /* Sombra pesada e contrastante */
   }
 
   /* ------------- IMAGEM FLUTUANTE ------------- */
   .item-cover-float {
       float: left;
-      width: 75px;
-      height: 110px;
+      width: 70px;
+      height: 105px;
       object-fit: cover;
-      margin-right: 14px;
-      margin-bottom: 6px;
+      margin-right: 12px;
+      margin-bottom: 4px;
       border-radius: 3px;
       box-shadow: 1px 2px 6px rgba(0,0,0,0.15);
       background: #f0f0f0;
   }
 
-  /* Clearfix nativo para floats */
-  .catalog-item::after { content: ""; display: table; clear: both; }
-
-  /* ------------- TEXTOS NEUTROS ------------- */
+  /* ------------- TEXTOS E CORES ------------- */
   .item-header-row { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2px; }
   .item-title { font-size: 1.1em; font-weight: 800; color: var(--black); line-height: 1.15; flex: 1; padding-right: 10px; }
   .item-code { font-size: 0.6em; color: var(--gray); font-family: monospace; font-weight: 800; white-space: nowrap; margin-top: 2px; }
   
-  /* Autor Colorido */
+  /* Apenas o autor recebe a cor da borda */
   .item-author { font-size: 0.95em; font-weight: 800; margin-bottom: 8px; line-height: 1.2; }
 
   .stars-container { margin-bottom: 10px; display: flex; gap: 2px; }
@@ -150,16 +153,21 @@ const globalCSS = `
   .star-gradient { width: 28px; height: 28px; filter: drop-shadow(0px 3px 4px rgba(0,0,0,0.25)); margin-bottom: 6px; display: block; }
 
   /* ------------- FICHA CATALOGRÁFICA ------------- */
-  .catalog-ficha { font-size: 0.7em; display: flex; flex-direction: column; gap: 4px; margin-top: 4px; }
+  .catalog-ficha { font-size: 0.65em; display: flex; flex-direction: column; gap: 4px; margin-top: 4px; }
   .ficha-row { display: flex; flex-direction: row; gap: 6px; line-height: 1.3; }
   .ficha-label { font-weight: 500; color: #999; text-transform: uppercase; font-size: 0.85em; white-space: nowrap; }
-  .ficha-value { color: var(--black); font-weight: 700; }
+  .ficha-value { color: var(--black); font-weight: 700; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
 
   /* ------------- DASHBOARD ESTATÍSTICAS ------------- */
+  .metrics-row { display: flex; gap: 15px; margin-bottom: 25px; width: 100%; }
+  .metric-box { flex: 1; background: var(--white); border-top: 4px solid var(--black); padding: 15px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border-radius: 4px; }
+  .metric-box h4 { margin: 0 0 5px 0; font-size: 0.7em; color: var(--gray); text-transform: uppercase; }
+  .metric-box p { margin: 0; font-size: 1.8em; font-weight: 800; color: var(--black); }
+
   .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; width: 100%; }
   .chart-card { background: var(--white); border: 1px solid #eee; border-radius: 8px; padding: 15px; }
   .chart-card h3 { font-size: 0.8em; text-transform: uppercase; color: var(--gray); margin-top: 0; margin-bottom: 15px; text-align: center; font-weight: 600; }
-  .chart-container { height: 200px; width: 100%; }
+  .chart-container { height: 180px; width: 100%; }
 
   @media print {
       body { background-color: var(--white) !important; margin: 0; padding: 0; }
@@ -184,7 +192,7 @@ const useExternalScripts = () => {
     return loaded;
 };
 
-// Ícones dinâmicos
+// Ícones SVG e sistema de cores para notas (Vazia, Ouro, Ciano, Pink)
 const StarIcon = ({ filled, color }) => (
     <svg className="star" viewBox="0 0 24 24" fill={filled ? color : "none"} stroke={color} strokeWidth="2">
         <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
@@ -233,9 +241,10 @@ const StarRating = ({ nota }) => {
     let colorHex = '#ccc';
     let colorId = 'gray';
 
-    if (nota > 0 && nota <= 2) { colorHex = 'var(--gold)'; colorId = 'gold'; }
-    else if (nota > 2 && nota <= 3) { colorHex = 'var(--cyan)'; colorId = 'cyan'; }
-    else if (nota > 3 && nota < 5) { colorHex = 'var(--pink)'; colorId = 'pink'; }
+    // Sistema de cores de avaliação solicitado (1-2 Dourado, 3 Ciano, 4 Pink)
+    if (nota > 0 && nota <= 2.4) { colorHex = 'var(--gold)'; colorId = 'gold'; }
+    else if (nota >= 2.5 && nota <= 3.4) { colorHex = 'var(--cyan)'; colorId = 'cyan'; }
+    else if (nota >= 3.5 && nota < 5) { colorHex = 'var(--pink)'; colorId = 'pink'; }
 
     const stars = [];
     for (let i = 1; i <= 5; i++) {
@@ -271,7 +280,7 @@ const CoverPage = ({ title, isMain, ownerName, dateStr, colorKey = 2 }) => {
                 ) : (
                     <>
                         <h2 className="cover-title" style={{ fontSize: '2em', letterSpacing: '2px' }}>Categoria</h2>
-                        <h1 className="cover-owner" style={{ fontSize: '4em' }}>{title}</h1>
+                        <h1 className="vcr-title" style={{ color: accent }}>{title}</h1>
                     </>
                 )}
             </div>
@@ -285,13 +294,13 @@ const ItemCard = ({ item, cat }) => {
     
     let isStar5 = nota === 5;
     
-    // A borda e o Autor usam a mesma cor para manter coesão da coleção
+    // A borda e o Autor usam a cor vinculada ao criador da obra.
     const baseKey = getSortKey(item);
     const hIndex = getHashIndex(baseKey);
     const palette = ['var(--cyan)', 'var(--pink)', 'var(--gold)'];
     const accentColor = palette[hIndex % 3];
 
-    // Lógica da Ficha Dinâmica com base no tipo
+    // Lógica da Ficha Dinâmica baseada no tipo (Livros, Discos, Filmes, Games)
     const formatFicha = () => {
         const f = [];
         if (item['Tipo']) f.push({ l: 'TIPO', v: item['Tipo'] });
@@ -315,10 +324,10 @@ const ItemCard = ({ item, cat }) => {
             if (item['Status']) f.push({ l: 'STATUS', v: item['Status'] });
             if (item['Páginas/Tempo']) f.push({ l: 'MINUTOS', v: item['Páginas/Tempo'] });
         } else {
-            // Fallback
+            // Padrão Fallback
             if (item['Editora/Gravadora']) f.push({ l: 'EDITORA', v: item['Editora/Gravadora'] });
             if (item['Status']) f.push({ l: 'STATUS', v: item['Status'] });
-            if (item['Páginas/Tempo']) f.push({ l: 'TEMPO/PÁG', v: item['Páginas/Tempo'] });
+            if (item['Páginas/Tempo']) f.push({ l: 'TEMPO', v: item['Páginas/Tempo'] });
         }
         return f;
     };
@@ -340,7 +349,7 @@ const ItemCard = ({ item, cat }) => {
                 <div className="item-author" style={{ color: accentColor }}>{authorName}</div>
             )}
 
-            {/* Imagem em Float faz com que todo o texto restante envolva a capa, evitando espaços brancos */}
+            {/* A Imagem com Float permite que os textos abracem ela e fluam para baixo economizando espaço! */}
             {item['URL da Capa'] && item['URL da Capa'].trim() !== '' && (
                 <img 
                     className="item-cover-float"
@@ -378,7 +387,7 @@ export default function App() {
     const chartTypeRef = useRef(null);
     const chartStatusRef = useRef(null);
     const chartRatingRef = useRef(null);
-    const chartAuthorRef = useRef(null);
+    const chartPublisherRef = useRef(null);
 
     const handleFileUpload = (e) => {
         const file = e.target.files[0];
@@ -415,11 +424,13 @@ export default function App() {
         
         const sortedCategories = Object.keys(grouped).sort();
 
+        // 1. Capa Master
         pages.push(<CoverPage key="main-cover" title="Catálogo" isMain={true} ownerName={ownerName} dateStr={dateStr} colorKey={3} />);
 
+        // 2. Iterando pelas Categorias
         sortedCategories.forEach((cat, catIndex) => {
             
-            // Ordenação Alfabética Natural Múltipla (Autor -> Título -> Ano)
+            // Ordenação Alfabética Natural (Autor -> Título -> Ano)
             grouped[cat].sort((a, b) => {
                 const keyA = getSortKey(a);
                 const keyB = getSortKey(b);
@@ -434,8 +445,7 @@ export default function App() {
             const cleanCatName = cat.substring(2);
             pages.push(<CoverPage key={`cover-${cat}`} title={cleanCatName} colorKey={catIndex} />);
             
-            // O Masonry Layout empacota melhor. Definimos 8 por página por precaução (4 linhas), 
-            // e o `column-count` ajeita a altura assimétrica.
+            // 8 Itens cravados preenchem a folha A4 em 4 linhas e 2 colunas.
             const itemsPerPage = 8; 
             for (let i = 0; i < grouped[cat].length; i += itemsPerPage) {
                 const chunk = grouped[cat].slice(i, i + itemsPerPage);
@@ -471,11 +481,32 @@ export default function App() {
             }
         });
 
+        // 3. Página de Estatísticas 
+        // Vamos extrair as métricas de leitura aqui antes de desenhar a tela
+        let totalPages = 0; let totalTracks = 0; let totalGameTime = 0; let totalVideoTime = 0;
+        csvData.forEach(item => {
+            const rawCat = getCategoryInfo(item['Tipo']);
+            let val = parseInt(item['Páginas/Tempo'], 10);
+            if (!isNaN(val)) {
+                if (rawCat === '1 LIVROS') totalPages += val;
+                if (rawCat === '2 DISCOS') totalTracks += val;
+                if (rawCat === '4 GAMES') totalGameTime += val;
+                if (rawCat === '3 VÍDEO') totalVideoTime += val;
+            }
+        });
+
         pages.push(
             <div className="pdf-page" key="stats-page">
                 <div className="page-header"><span>Estatísticas</span><span>Visão Geral</span></div>
-                <h2 style={{ fontWeight: 300, fontSize: '2em', marginBottom: '30px', marginTop: '10px' }}>Visão Geral</h2>
+                <h2 style={{ fontWeight: 300, fontSize: '2em', marginBottom: '20px', marginTop: '10px' }}>Visão Geral</h2>
                 
+                <div className="metrics-row">
+                    <div className="metric-box"><h4>Páginas</h4><p>{totalPages}</p></div>
+                    <div className="metric-box"><h4>Faixas</h4><p>{totalTracks}</p></div>
+                    <div className="metric-box"><h4>Vídeo (Min)</h4><p>{totalVideoTime}</p></div>
+                    <div className="metric-box"><h4>Games (Hrs)</h4><p>{totalGameTime}</p></div>
+                </div>
+
                 <div className="stats-grid">
                     <div className="chart-card">
                         <h3>Divisão por Suporte</h3>
@@ -490,8 +521,8 @@ export default function App() {
                         <div className="chart-container"><canvas ref={chartRatingRef}></canvas></div>
                     </div>
                     <div className="chart-card">
-                        <h3>Top 5 Autores/Desenvolvedoras</h3>
-                        <div className="chart-container"><canvas ref={chartAuthorRef}></canvas></div>
+                        <h3>Top 5 Editoras / Gravadoras</h3>
+                        <div className="chart-container"><canvas ref={chartPublisherRef}></canvas></div>
                     </div>
                 </div>
 
@@ -502,6 +533,7 @@ export default function App() {
         return pages;
     }, [csvData, ownerName]);
 
+    // Renderização dos Gráficos (Aplicando a regra de excluir zeros das notas e corrigir Status)
     useEffect(() => {
         const instances = [];
 
@@ -511,57 +543,68 @@ export default function App() {
 
             const catCount = {};
             const statusCount = {};
-            const ratingCount = { 'Nota 5': 0, 'Nota 4': 0, 'Nota 3': 0, 'Nota 2': 0, 'Nota 1': 0, 'S/ Nota': 0 };
-            const authorCount = {};
+            const ratingCount = { 'Nota 1': 0, 'Nota 2': 0, 'Nota 3': 0, 'Nota 4': 0, 'Nota 5': 0 };
+            const pubCount = {};
 
             csvData.forEach(item => {
-                const cat = getCategoryInfo(item['Tipo']).substring(2);
+                const rawCat = getCategoryInfo(item['Tipo']);
+                const cat = rawCat.substring(2);
                 catCount[cat] = (catCount[cat] || 0) + 1;
                 
-                const stat = item['Status'] || 'Não Definido';
+                // Tratamento de Status (Discos e Filmes forçados baseados na nota)
+                let n = parseFloat((item['Nota'] || '0').replace(',', '.'));
+                if (isNaN(n)) n = 0;
+
+                let stat = item['Status'] || 'Não Definido';
+                if (rawCat === '2 DISCOS' || rawCat === '3 VÍDEO') {
+                    stat = n > 0 ? 'Concluído' : 'Não Iniciado';
+                }
                 statusCount[stat] = (statusCount[stat] || 0) + 1;
 
-                let n = parseFloat((item['Nota'] || '0').replace(',', '.'));
-                if (n === 5) ratingCount['Nota 5']++;
-                else if (n >= 4) ratingCount['Nota 4']++;
-                else if (n >= 3) ratingCount['Nota 3']++;
-                else if (n >= 2) ratingCount['Nota 2']++;
-                else if (n >= 1) ratingCount['Nota 1']++;
-                else ratingCount['S/ Nota']++;
+                // Ratings (Exclui 0 / Sem Nota)
+                if (n >= 1 && n < 2) ratingCount['Nota 1']++;
+                else if (n >= 2 && n < 3) ratingCount['Nota 2']++;
+                else if (n >= 3 && n < 4) ratingCount['Nota 3']++;
+                else if (n >= 4 && n < 5) ratingCount['Nota 4']++;
+                else if (n === 5) ratingCount['Nota 5']++;
 
-                const author = (item['Autor/Desenvolvedor'] || '').trim();
-                if (author && author.toLowerCase() !== 'various') {
-                    authorCount[author] = (authorCount[author] || 0) + 1;
+                // Publisher (Editora/Gravadora/Desenvolvedora)
+                const pub = (item['Editora/Gravadora'] || '').trim();
+                if (pub && pub.toLowerCase() !== 'various') {
+                    pubCount[pub] = (pubCount[pub] || 0) + 1;
                 }
             });
 
-            const sortedAuthors = Object.entries(authorCount)
+            const sortedPubs = Object.entries(pubCount)
                 .sort((a, b) => b[1] - a[1])
                 .slice(0, 5);
 
-            const palette = ['#008B8B', '#E60073', '#B8860B', '#222222', '#dddddd'];
+            // Paleta Estrita (Pink, Ciano Escuro, Dourado, Branco com Borda Preta, Preto)
+            const paletteBg = ['#E60073', '#008B8B', '#B8860B', '#FFFFFF', '#222222'];
+            const paletteBorder = ['#E60073', '#008B8B', '#B8860B', '#222222', '#222222'];
+            const pBorderWidth = [0, 0, 0, 2, 0];
 
             instances.push(new window.Chart(chartTypeRef.current, {
                 type: 'bar',
-                data: { labels: Object.keys(catCount), datasets: [{ label: 'Itens', data: Object.values(catCount), backgroundColor: palette, borderRadius: 4 }] },
+                data: { labels: Object.keys(catCount), datasets: [{ label: 'Itens', data: Object.values(catCount), backgroundColor: paletteBg, borderColor: paletteBorder, borderWidth: pBorderWidth, borderRadius: 4 }] },
                 options: { animation: false, responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
             }));
 
             instances.push(new window.Chart(chartStatusRef.current, {
                 type: 'doughnut',
-                data: { labels: Object.keys(statusCount), datasets: [{ data: Object.values(statusCount), backgroundColor: ['#222222', '#B8860B', '#E60073', '#008B8B', '#eeeeee'], borderWidth: 0 }] },
-                options: { animation: false, responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+                data: { labels: Object.keys(statusCount), datasets: [{ data: Object.values(statusCount), backgroundColor: paletteBg, borderColor: paletteBorder, borderWidth: pBorderWidth }] },
+                options: { animation: false, responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
             }));
 
             instances.push(new window.Chart(chartRatingRef.current, {
                 type: 'bar',
-                data: { labels: Object.keys(ratingCount), datasets: [{ label: 'Qtd', data: Object.values(ratingCount), backgroundColor: '#B8860B', borderRadius: 4 }] },
+                data: { labels: Object.keys(ratingCount), datasets: [{ label: 'Qtd', data: Object.values(ratingCount), backgroundColor: '#008B8B', borderRadius: 4 }] },
                 options: { animation: false, responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
             }));
 
-            instances.push(new window.Chart(chartAuthorRef.current, {
+            instances.push(new window.Chart(chartPublisherRef.current, {
                 type: 'bar',
-                data: { labels: sortedAuthors.map(a => a[0].length > 15 ? a[0].substring(0, 15) + '...' : a[0]), datasets: [{ label: 'Qtd', data: sortedAuthors.map(a => a[1]), backgroundColor: '#E60073', borderRadius: 4 }] },
+                data: { labels: sortedPubs.map(a => a[0].length > 15 ? a[0].substring(0, 15) + '...' : a[0]), datasets: [{ label: 'Qtd', data: sortedPubs.map(a => a[1]), backgroundColor: '#B8860B', borderRadius: 4 }] },
                 options: { indexAxis: 'y', animation: false, responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
             }));
         }
