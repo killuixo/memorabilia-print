@@ -85,11 +85,35 @@ const globalCSS = `
       height: 100%; padding-left: 15mm; position: relative; z-index: 10;
   }
   .cover-title { font-size: 3em; font-weight: 300; margin: 0 0 10px 0; letter-spacing: -1px; color: var(--gray); text-transform: uppercase; }
-  .cover-owner { font-size: 4.5em; font-weight: 800; margin: 0; color: var(--black); line-height: 1; letter-spacing: -2px; }
+  
+  /* Nome do Dono VCR com Degradê Furtacor */
+  .cover-owner-vcr { 
+      font-family: 'VT323', monospace; 
+      font-size: 6em; 
+      font-weight: bold; 
+      margin: 0; 
+      line-height: 0.9; 
+      letter-spacing: 2px; 
+      background: linear-gradient(135deg, var(--pink) 0%, var(--cyan) 50%, var(--gold) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      color: var(--pink); /* Fallback */
+      -webkit-text-stroke: 2px var(--pink); /* Engrossa a fonte e combina com o degradê */
+      filter: drop-shadow(3px 4px 0px rgba(0,0,0,0.15));
+  }
+  
   .cover-meta { font-size: 1em; color: var(--gray); margin-top: 40px; }
 
   /* Título especial VCR para Capas de Categoria */
-  .vcr-title { font-family: 'VT323', monospace; font-size: 6em; font-weight: normal; margin: 0; line-height: 1; letter-spacing: 2px; }
+  .vcr-title { 
+      font-family: 'VT323', monospace; 
+      font-size: 7em; 
+      font-weight: bold; 
+      margin: 0; 
+      line-height: 0.9; 
+      letter-spacing: 2px; 
+      -webkit-text-stroke: 3px currentColor; /* Deixa a fonte VCR bem mais grossa */
+  }
 
   .mondrian-decor { position: absolute; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; z-index: 1; }
   .m-line-v { position: absolute; width: 4px; background: var(--black); top: 0; bottom: 0; }
@@ -272,7 +296,7 @@ const CoverPage = ({ title, isMain, ownerName, dateStr, colorKey = 2 }) => {
                 {isMain ? (
                     <>
                         <h2 className="cover-title">Catálogo Pessoal</h2>
-                        <h1 className="cover-owner">{ownerName || 'Acervo'}</h1>
+                        <h1 className="cover-owner-vcr">{ownerName || 'Acervo'}</h1>
                         <div className="cover-meta">
                             <div style={{ fontSize: '0.85em', marginTop: '15px' }}>Gerado em {dateStr}</div>
                         </div>
