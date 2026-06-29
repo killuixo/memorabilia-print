@@ -107,20 +107,21 @@ const globalCSS = `
       display: grid;
       grid-template-columns: 1fr 1fr;
       column-gap: 15mm;
-      row-gap: 10mm;
+      row-gap: 8mm;
       height: 245mm;
       align-content: start;
+      align-items: start; /* Garante que a caixa pare de crescer quando o texto acabar */
   }
 
   .catalog-item {
       position: relative;
-      display: block; /* Alterado de flex para block para permitir o float */
-      padding: 0 0 0 15px;
-      border-left: 3px solid; /* Cor dinâmica */
-      height: 75mm;
-      overflow: hidden; /* Mantém o grid estrito e funciona como clearfix */
+      display: block; 
+      padding: 0 0 0 12px;
+      border-left: 3px solid; 
+      overflow: hidden; /* Clearfix para a imagem flutuante */
       background: var(--white);
       box-sizing: border-box;
+      page-break-inside: avoid;
   }
 
   /* Destaque 5 Estrelas */
@@ -137,12 +138,12 @@ const globalCSS = `
   /* Imagem Flutuante */
   .item-cover-img {
       float: left;
-      width: 75px;
+      width: 85px; /* Capas maiores */
       height: auto;
-      max-height: 110px;
+      max-height: 125px; /* Capas maiores */
       object-fit: cover;
       margin: 0 15px 5px 0;
-      border-radius: 2px;
+      border-radius: 3px;
       box-shadow: 2px 3px 8px rgba(0,0,0,0.15);
       background-color: #eee;
   }
@@ -424,7 +425,7 @@ export default function App() {
             const cleanCatName = cat.substring(2);
             pages.push(<CoverPage key={`cover-${cat}`} title={cleanCatName} colorKey={catIndex} />);
             
-            const itemsPerPage = 6; 
+            const itemsPerPage = 10; /* Aumentado para otimizar o espaço da página */
             for (let i = 0; i < grouped[cat].length; i += itemsPerPage) {
                 const chunk = grouped[cat].slice(i, i + itemsPerPage);
                 
