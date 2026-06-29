@@ -174,7 +174,7 @@ const globalCSS = `
       font-size: 0.6em;
       font-family: monospace;
       font-weight: 800;
-      color: var(--item-accent);
+      color: var(--code-color);
       letter-spacing: 0.5px;
       z-index: 2;
   }
@@ -182,7 +182,7 @@ const globalCSS = `
   .item-title { 
       font-size: 1.15em; 
       font-weight: 800; 
-      color: var(--item-accent); 
+      color: var(--title-color); 
       line-height: 1.15; 
       margin-bottom: 4px; 
       padding-right: 45px; 
@@ -304,14 +304,13 @@ const getCategoryInfo = (tipo) => {
 };
 
 // Gera um Hash Estável baseado no Autor ou Título para manter a cor da Coleção (Série) igual
-const getHashColor = (str) => {
-    if (!str) return 'var(--black)';
+const getHashIndex = (str) => {
+    if (!str) return 0;
     let hash = 0;
     for (let i = 0; i < str.length; i++) {
         hash = str.charCodeAt(i) + ((hash << 5) - hash);
     }
-    const colors = ['var(--cyan)', 'var(--pink)', 'var(--gold)'];
-    return colors[Math.abs(hash) % colors.length];
+    return Math.abs(hash);
 };
 
 const getSortKey = (item) => {
@@ -369,9 +368,14 @@ const ItemCard = ({ item, cat }) => {
     
     let isStar5 = nota === 5;
     
-    // A cor agora é travada pelo Hash do SortKey (Agrupa Coleções e Autores na mesma cor!)
+    // A cor agora é distribuída entre Borda/Autor, Título e Código garantindo uso das 3 cores
     const baseKey = getSortKey(item);
-    const itemAccentColor = getHashColor(baseKey);
+    const hIndex = getHashIndex(baseKey);
+    const palette = ['var(--cyan)', 'var(--pink)', 'var(--gold)'];
+
+    const colorBorderAuthor = palette[hIndex % 3];
+    const colorTitle = palette[(hIndex + 1) % 3];
+    const colorCode = palette[(hIndex + 2) % 3];
 
     // Montador Inteligente de Ficha baseada na Categoria
     const formatFicha = () => {
@@ -410,7 +414,11 @@ const ItemCard = ({ item, cat }) => {
     const authorName = item['Autor/Desenvolvedor'] && item['Autor/Desenvolvedor'].trim() !== '' ? item['Autor/Desenvolvedor'] : null;
 
     return (
-        <div className={`catalog-item ${isStar5 ? 'star-5' : ''}`} style={{ '--item-accent': itemAccentColor }}>
+        <div className={`catalog-item ${isStar5 ? 'star-5' : ''}`} style={{ 
+            '--item-accent': colorBorderAuthor,
+            '--title-color': colorTitle,
+            '--code-color': colorCode
+        }}>
             
             {item['Código Arquivístico'] && (
                 <div className="item-code">{item['Código Arquivístico']}</div>
