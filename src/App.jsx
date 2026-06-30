@@ -1,17 +1,20 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 
-// Barreira de erros para evitar Tela Branca
 class ErrorBoundary extends React.Component {
     constructor(props) { super(props); this.state = { hasError: false, errorInfo: null }; }
     static getDerivedStateFromError(error) { return { hasError: true, errorInfo: error }; }
     render() {
         if (this.state.hasError) {
-            return <div style={{ padding: 40, color: '#FF007F', textAlign: 'center', fontFamily: 'sans-serif' }}>
-                <h2>Erro Crítico ao Processar o Catálogo</h2>
-                <p>Ocorreu uma falha ao ler os dados do seu CSV.</p>
-                <code style={{ background: '#eee', padding: 10, display: 'block', borderRadius: 5 }}>{this.state.errorInfo.toString()}</code>
-                <button onClick={() => window.location.reload()} style={{ marginTop: 20, padding: '10px 20px', cursor: 'pointer' }}>Recarregar Aplicativo</button>
-            </div>;
+            return (
+                <div style={{ padding: 40, color: '#FF007F', textAlign: 'center', fontFamily: 'sans-serif' }}>
+                    <h2>Erro Crítico ao Processar o Catálogo</h2>
+                    <p>Ocorreu uma falha ao ler os dados do seu CSV.</p>
+                    <code style={{ background: '#eee', padding: 10, display: 'block', borderRadius: 5 }}>
+                        {this.state.errorInfo?.message || String(this.state.errorInfo)}
+                    </code>
+                    <button onClick={() => window.location.reload()} style={{ marginTop: 20, padding: '10px 20px', cursor: 'pointer' }}>Recarregar Aplicativo</button>
+                </div>
+            );
         }
         return this.props.children;
     }
@@ -22,7 +25,7 @@ const globalCSS = `
 
   :root {
       --pink: #FF007F;
-      --cyan: #008B8B; /* Ciano Escuro / Legível */
+      --cyan: #008B8B;
       --gold: #C5A059;
       --black: #222222;
       --gray: #777777;
@@ -40,7 +43,6 @@ const globalCSS = `
       print-color-adjust: exact !important;
   }
 
-  /* ------------- INTERFACE DE UTILIZADOR ------------- */
   .app-ui {
       max-width: 600px; margin: 10vh auto; background: var(--white);
       padding: 40px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);
@@ -61,7 +63,6 @@ const globalCSS = `
   button.primary-btn:hover:not(:disabled) { background: var(--pink); }
   button.primary-btn:disabled { background: #d0d0d0; cursor: not-allowed; }
 
-  /* ------------- VISUALIZADOR ------------- */
   .preview-wrapper { padding: 40px 0; display: flex; flex-direction: column; align-items: center; gap: 30px; }
   
   .floating-bar {
@@ -72,7 +73,7 @@ const globalCSS = `
   .floating-bar button { background: white; color: black; border: none; padding: 10px 20px; border-radius: 20px; font-weight: bold; cursor: pointer; }
   .floating-bar button.print-btn { background: var(--cyan); color: white;}
 
-  /* ------------- PÁGINA A4 ------------- */
+  /* PÁGINA A4 E CABEÇALHOS */
   .pdf-page {
       width: 210mm; height: 297mm; background: var(--white); position: relative;
       padding: 20mm 15mm 20mm 15mm; box-sizing: border-box; overflow: hidden;
@@ -91,7 +92,7 @@ const globalCSS = `
       border-top: 1px solid #eee; padding-top: 5px;
   }
 
-  /* ------------- CAPAS E FONTES RETRÔ ------------- */
+  /* CAPA COM FONTES RETRÔ */
   .vcr-font { font-family: 'VT323', monospace; }
   
   .cover-page { 
@@ -99,7 +100,7 @@ const globalCSS = `
       height: 100%; padding-left: 15mm; position: relative; z-index: 10;
   }
   
-  .cover-subtitle { font-size: 2.2em; font-weight: 300; margin: 0 0 15px 0; color: var(--gray); text-transform: uppercase; letter-spacing: -0.5px;}
+  .cover-subtitle { font-size: 1.2em; font-weight: 400; margin: 0 0 5px 0; color: var(--gray); text-transform: uppercase; letter-spacing: 1px;}
   
   .category-title { 
       font-size: 6.5em; margin: 0; line-height: 1; letter-spacing: 2px; text-transform: uppercase;
@@ -107,12 +108,12 @@ const globalCSS = `
   }
 
   .cover-owner { 
-      font-size: 9.5em; margin: 0; line-height: 0.9;
+      font-size: 13em; margin: 0; line-height: 0.8;
       background: linear-gradient(135deg, var(--pink) 0%, var(--cyan) 50%, var(--gold) 100%);
       -webkit-background-clip: text;
       color: transparent;
-      -webkit-text-stroke: 2px var(--black);
-      filter: drop-shadow(5px 5px 0px rgba(0,0,0,0.15));
+      -webkit-text-stroke: 4px var(--black);
+      filter: drop-shadow(8px 8px 0px rgba(0,0,0,0.2));
   }
 
   .mondrian-decor { position: absolute; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; z-index: 1; }
@@ -120,35 +121,30 @@ const globalCSS = `
   .m-line-h { position: absolute; height: 4px; background: var(--black); left: 0; right: 0; }
   .m-block { position: absolute; }
 
-  /* ------------- GRELHA MASONRY (ASSIMÉTRICA PERFEITA) ------------- */
-  .masonry-layout {
-      display: flex;
-      gap: 10mm;
-      align-items: flex-start;
-      height: 245mm; /* Limite de segurança antes do rodapé */
-  }
-
-  .masonry-col {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 6mm; /* Respiro vertical entre os itens */
+  /* GRELHA GRID PERFEITA DA ESQUERDA PARA A DIREITA */
+  .catalog-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      column-gap: 12mm;
+      row-gap: 6mm;
+      align-items: start;
+      align-content: start;
   }
 
   .catalog-item {
-      display: flow-root; /* Clearfix moderno para floats */
+      display: flow-root; 
       padding: 10px 10px 10px 15px;
       border-left: 4px solid; 
       background: var(--white);
       border-radius: 0 6px 6px 0;
       box-sizing: border-box;
-      box-shadow: 2px 2px 10px rgba(0,0,0,0.05); /* Sombra mais visível */
+      box-shadow: 2px 2px 10px rgba(0,0,0,0.05); 
   }
 
   .catalog-item.star-5 {
       border-left-width: 8px !important;
       border: 1px solid rgba(0,0,0,0.08);
-      box-shadow: 0 12px 30px rgba(0,0,0,0.18); /* Sombra hiper-contrastante */
+      box-shadow: 0 15px 35px rgba(0,0,0,0.25); 
       border-radius: 4px 8px 8px 4px;
       padding-left: 12px;
   }
@@ -169,31 +165,29 @@ const globalCSS = `
   .item-title { font-size: 1.05em; font-weight: 800; color: var(--black); line-height: 1.1; margin-bottom: 4px; }
   .item-author { font-size: 0.9em; font-weight: 700; line-height: 1.2; margin-bottom: 6px; }
   
-  .stars-container { margin-bottom: 6px; display: flex; gap: 2px; }
+  .stars-container { margin-bottom: 6px; display: flex; gap: 2px; align-items: center; }
   .star { width: 13px; height: 13px; }
-  .star-gradient { width: 22px; height: 22px; filter: drop-shadow(0px 2px 3px rgba(0,0,0,0.2)); margin-bottom: 4px; }
+  .star-giant { width: 32px; height: 32px; filter: drop-shadow(0px 3px 5px rgba(0,0,0,0.3)); margin-bottom: 4px; }
 
-  /* ------------- FICHA CATALOGRÁFICA ------------- */
   .catalog-ficha { font-size: 0.65em; display: flex; flex-direction: column; gap: 3px; margin-top: 4px; clear: none; }
   .ficha-row { display: flex; flex-direction: row; gap: 4px; line-height: 1.3; }
   .ficha-label { font-weight: 600; color: var(--gray); text-transform: uppercase; white-space: nowrap; font-size: 0.9em;}
   .ficha-value { font-weight: 700; color: var(--black); word-break: break-word; }
 
-  /* ------------- ESTATÍSTICAS (GRELHA 6 GRÁFICOS) ------------- */
   .stats-header-bar {
       display: flex; justify-content: space-between; background: var(--black); color: white;
-      padding: 10px 20px; border-radius: 8px; margin-bottom: 20px;
+      padding: 10px 15px; border-radius: 8px; margin-bottom: 15px;
   }
   .stat-block { text-align: center; width: 25%; }
-  .stat-num { font-size: 2em; font-weight: 800; color: var(--gold); line-height: 1; margin-bottom: 3px; font-family: 'VT323', monospace; text-shadow: 2px 2px 0 #000;}
-  .stat-lbl { font-size: 0.6em; text-transform: uppercase; letter-spacing: 1px; color: #ccc;}
+  .stat-num { font-size: 1.8em; font-weight: 800; color: var(--gold); line-height: 1; margin-bottom: 3px; font-family: 'VT323', monospace; text-shadow: 2px 2px 0 #000;}
+  .stat-sub { font-size: 0.6em; color: var(--cyan); font-weight: bold; display: block; margin-bottom: 2px;}
+  .stat-lbl { font-size: 0.55em; text-transform: uppercase; letter-spacing: 1px; color: #ccc;}
 
   .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; width: 100%; }
   .chart-card { background: var(--white); border: 2px solid #eee; border-radius: 8px; padding: 10px; }
   .chart-card h3 { font-size: 0.75em; text-transform: uppercase; color: var(--black); margin-top: 0; margin-bottom: 8px; text-align: center; font-weight: 800; }
-  .chart-container { height: 140px; width: 100%; }
+  .chart-container { height: 160px; width: 100%; }
 
-  /* ------------- REGRAS DE IMPRESSÃO NATIVA ------------- */
   @media print {
       body, html { background-color: var(--white) !important; margin: 0; padding: 0; height: auto !important; }
       .no-print { display: none !important; }
@@ -203,7 +197,6 @@ const globalCSS = `
   }
 `;
 
-// Hook para carregar as bibliotecas externas
 const useExternalScripts = () => {
     const [loaded, setLoaded] = useState(false);
     useEffect(() => {
@@ -219,34 +212,25 @@ const useExternalScripts = () => {
     return loaded;
 };
 
-// Ícones Customizados
 const StarIcon = ({ filled, color }) => (
     <svg className="star" viewBox="0 0 24 24" fill={filled ? color : "none"} stroke={filled ? color : "#aaa"} strokeWidth="2">
         <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
     </svg>
 );
 
-const HalfStarIcon = ({ color }) => (
-    <svg className="star" viewBox="0 0 24 24" fill="url(#half)">
-        <defs><linearGradient id="half"><stop offset="50%" stopColor={color}/><stop offset="50%" stopColor="transparent"/></linearGradient></defs>
-        <path stroke={color} strokeWidth="2" d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-    </svg>
-);
-
-const GradientStarIcon = () => (
-    <svg className="star-gradient" viewBox="0 0 24 24" stroke="none">
+const GiantStarIcon = () => (
+    <svg className="star-giant" viewBox="0 0 24 24" stroke="none">
         <defs>
-            <linearGradient id="grad-star" x1="0%" y1="0%" x2="100%" y2="100%">
+            <linearGradient id="grad-giant" x1="0%" y1="0%" x2="100%" y2="100%">
                 <stop offset="0%" stopColor="var(--pink)" />
                 <stop offset="50%" stopColor="var(--cyan)" />
                 <stop offset="100%" stopColor="var(--gold)" />
             </linearGradient>
         </defs>
-        <path fill="url(#grad-star)" d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+        <path fill="url(#grad-giant)" d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
     </svg>
 );
 
-// Funções Utilitárias Blindadas
 const safeString = (val) => (val === null || val === undefined) ? '' : String(val);
 
 const getCategoryInfo = (tipo) => {
@@ -265,18 +249,22 @@ const getSortKey = (item) => {
     return safeString(item['Título']).trim();
 };
 
-// Estimador de Altura do Item para o Motor Masonry
+const getBaseWork = (title) => {
+    return safeString(title).split(/[:\-]/)[0].trim().toLowerCase() || 'desconhecido';
+};
+
+// Cálculo preciso para encaixar o máximo de itens sem invadir o rodapé
 const estimateItemHeight = (item) => {
     let nota = parseFloat(safeString(item['Nota']).replace(',', '.'));
-    let h = 8; // Padding base + gap mínimo
+    let h = 8; // Margem e borders minimas em mm
 
     let titleLen = safeString(item['Título']).length;
-    h += Math.ceil(titleLen / 25) * 5.5; // Altura do título
+    h += Math.ceil(titleLen / 30) * 4.5; 
 
     let autor = safeString(item['Autor/Desenvolvedor']).trim();
-    if (autor && autor.toLowerCase() !== 'various') h += 5.5;
+    if (autor && autor.toLowerCase() !== 'various') h += 4.5;
 
-    h += 6; // Altura das Estrelas
+    h += 4.5; // Espaço das estrelas
 
     let rows = 0;
     if (item['Tipo']) rows++;
@@ -284,33 +272,34 @@ const estimateItemHeight = (item) => {
     if (item['Editora/Gravadora'] || item['Produtora'] || item['Desenvolvedora']) rows++;
     if (item['Status']) rows++;
     if (item['Páginas/Tempo'] || item['Faixas'] || item['Minutos'] || item['Horas']) rows++;
-    h += rows * 4.5; // Altura da Ficha
+    h += rows * 3.5; 
 
-    // Se tiver capa, a altura mínima é o tamanho da capa
     let hasCover = safeString(item['URL da Capa']).trim() !== '';
-    if (hasCover) h = Math.max(h, 28); 
+    if (hasCover) h = Math.max(h, 32); // A capa obriga a caixa a ter pelo menos ~32mm
+    
+    if (nota === 5) h += 8; // Margem da estrela gigante e sombra
 
-    if (nota === 5) h += 12; // Compensação de padding extra e estrela grande
-
-    return h + 6; // Adiciona o Gap (6mm) de respiro ao total
+    return h; 
 };
 
 const StarRating = ({ notaStr }) => {
     let n = parseFloat(safeString(notaStr).replace(',', '.'));
     if (isNaN(n)) n = 0;
 
-    if (n === 5) return <div className="stars-container"><GradientStarIcon /></div>;
+    if (n === 5) return <div className="stars-container"><GiantStarIcon /></div>;
     
-    let color = '#ccc';
-    if (n > 0 && n <= 2) color = 'var(--gold)';
-    else if (n > 2 && n <= 3) color = 'var(--cyan)';
-    else if (n > 3 && n < 5) color = 'var(--pink)';
+    let color = '#aaa';
+    if (n > 0 && n <= 2.9) color = 'var(--gold)';
+    else if (n >= 3 && n <= 3.9) color = 'var(--cyan)';
+    else if (n >= 4) color = 'var(--pink)';
 
     const stars = [];
     for (let i = 1; i <= 5; i++) {
-        if (n >= i) stars.push(<StarIcon key={i} filled={true} color={color} />);
-        else if (n >= i - 0.5) stars.push(<HalfStarIcon key={i} color={color} />);
-        else stars.push(<StarIcon key={i} filled={false} color={color} />);
+        if (n === 0) {
+            stars.push(<StarIcon key={i} filled={false} color="#aaa" />);
+        } else {
+            stars.push(<StarIcon key={i} filled={i <= Math.ceil(n)} color={i <= Math.ceil(n) ? color : '#ddd'} />);
+        }
     }
     return <div className="stars-container">{stars}</div>;
 };
@@ -349,7 +338,6 @@ const CoverPage = ({ title, isMain, ownerName, dateStr, colorIndex }) => {
     );
 };
 
-// Componente Cartão (Flutuação de Imagem Otimizada)
 const ItemCard = ({ item, accentColor }) => {
     let nota = parseFloat(safeString(item['Nota']).replace(',', '.'));
     if (isNaN(nota)) nota = 0;
@@ -373,8 +361,8 @@ const ItemCard = ({ item, accentColor }) => {
 
     if(cat === 'LIVROS') { pLabel = 'Editora'; tLabel = 'Páginas'; }
     if(cat === 'DISCOS') { pLabel = 'Gravadora'; tLabel = 'Faixas'; isDisco = true; }
-    if(cat === 'GAMES') { pLabel = 'Desenv.'; tLabel = 'Horas'; }
-    if(cat === 'VÍDEO') { pLabel = 'Produtora'; tLabel = 'Minutos'; }
+    if(cat === 'GAMES') { pLabel = 'Desenvolvedora'; tLabel = 'Horas'; }
+    if(cat === 'VÍDEO') { pLabel = 'Produtora'; tLabel = 'Horas'; }
 
     const urlCapa = safeString(item['URL da Capa']).trim();
     const codArq = safeString(item['Código Arquivístico']);
@@ -384,15 +372,12 @@ const ItemCard = ({ item, accentColor }) => {
 
     return (
         <div className={`catalog-item ${isStar5 ? 'star-5' : ''}`} style={{ borderLeftColor: accentColor }}>
-            
             {urlCapa !== '' && (
                 <div className="item-cover-box">
                     <img src={urlCapa} alt="Capa" crossOrigin="anonymous" onError={(e) => { e.target.style.display = 'none'; e.target.parentNode.style.display = 'none'; }} />
                 </div>
             )}
-
             {codArq && <div className="item-code">{codArq}</div>}
-
             <div className="item-title">{titulo}</div>
             
             {autor && autor.toLowerCase() !== 'various' && cat !== 'GAMES' && (
@@ -400,7 +385,7 @@ const ItemCard = ({ item, accentColor }) => {
             )}
             
             <StarRating notaStr={safeString(item['Nota'])} />
-
+            
             <div className="catalog-ficha">
                 {tipo && <div className="ficha-row"><span className="ficha-label">Tipo:</span><span className="ficha-value">{tipo}</span></div>}
                 {ano && <div className="ficha-row"><span className="ficha-label">Ano:</span><span className="ficha-value">{ano}</span></div>}
@@ -420,12 +405,13 @@ export default function App() {
     const [viewMode, setViewMode] = useState('upload'); 
     
     const fileInputRef = useRef(null);
+    
     const chartTypeRef = useRef(null);
     const chartStatusRef = useRef(null);
     const chartRatingRef = useRef(null);
-    const chartDecadeRef = useRef(null); // Novo Gráfico Décadas
+    const chartDecadeRef = useRef(null); 
     const chartAuthorRef = useRef(null);
-    const chartPubRef = useRef(null); // Novo Gráfico Editoras
+    const chartPubRef = useRef(null); 
 
     const handleFileUpload = (e) => {
         const file = e.target.files[0];
@@ -443,24 +429,38 @@ export default function App() {
     };
 
     const aggregates = useMemo(() => {
-        let p = 0, f = 0, m = 0, h = 0;
+        let metrics = { pTot: 0, pLid: 0, fTot: 0, fOuv: 0, mTot: 0, mAss: 0, hTot: 0, hJog: 0 };
+        
         csvData.forEach(item => {
             const catInfo = getCategoryInfo(item['Tipo']);
             const cat = catInfo ? catInfo.substring(2) : '';
             const rawVal = safeString(item['Páginas/Tempo'] || item['Faixas'] || item['Minutos'] || item['Horas']);
             const val = parseInt(rawVal.replace(/\D/g, '') || '0', 10);
+            let nota = parseFloat(safeString(item['Nota']).replace(',', '.'));
+            if(isNaN(nota)) nota = 0;
+            let status = safeString(item['Status']);
             
+            let isDone = (status === 'Concluído' || nota > 0);
+
             if (!isNaN(val)) {
-                if (cat === 'LIVROS') p += val;
-                if (cat === 'DISCOS') f += val;
-                if (cat === 'VÍDEO') m += val;
-                if (cat === 'GAMES') h += val;
+                if (cat === 'LIVROS') { metrics.pTot += val; if (isDone) metrics.pLid += val; }
+                if (cat === 'DISCOS') { metrics.fTot += val; if (isDone) metrics.fOuv += val; }
+                if (cat === 'VÍDEO')  { metrics.mTot += val; if (isDone) metrics.mAss += val; }
+                if (cat === 'GAMES')  { metrics.hTot += val; if (isDone) metrics.hJog += val; }
             }
         });
-        return { p, f, m, h };
+        
+        const calcPct = (read, tot) => tot > 0 ? Math.round((read/tot)*100) : 0;
+        
+        return {
+            ...metrics,
+            pPct: calcPct(metrics.pLid, metrics.pTot),
+            fPct: calcPct(metrics.fOuv, metrics.fTot),
+            mPct: calcPct(metrics.mAss, metrics.mTot),
+            hPct: calcPct(metrics.hJog, metrics.hTot)
+        };
     }, [csvData]);
 
-    // Motor de Paginação Dinâmica (Masonry)
     const pdfPages = useMemo(() => {
         if (!csvData.length) return [];
         
@@ -479,51 +479,69 @@ export default function App() {
         const sortedCategories = Object.keys(grouped).sort();
         const colorPalette = ['var(--pink)', 'var(--cyan)', 'var(--gold)'];
 
-        // Capa Principal
-        pages.push(<CoverPage key="main-cover" isMain={true} ownerName={ownerName} dateStr={dateStr} colorIndex={0} />);
+        // Pré-calcular Lógica Anti-Colisão Rigorosa
+        let globalPrevColor = -1;
+        const authorColorMap = {};
 
-        sortedCategories.forEach((cat, catIndex) => {
-            
+        sortedCategories.forEach(cat => {
             grouped[cat].sort((a, b) => {
                 const keyA = getSortKey(a);
                 const keyB = getSortKey(b);
                 return keyA.localeCompare(keyB, 'pt', { numeric: true, sensitivity: 'base' });
             });
 
+            grouped[cat].forEach(item => {
+                let authorKey = getSortKey(item);
+                if (authorColorMap[authorKey] === undefined) {
+                    let available = [0, 1, 2].filter(c => c !== globalPrevColor);
+                    let nextColor = available[Math.floor(Math.random() * available.length)];
+                    authorColorMap[authorKey] = nextColor;
+                    globalPrevColor = nextColor; 
+                } else {
+                    globalPrevColor = authorColorMap[authorKey]; 
+                }
+            });
+        });
+
+        pages.push(<CoverPage key="main-cover" isMain={true} ownerName={ownerName} dateStr={dateStr} colorIndex={Math.floor(Math.random()*3)} />);
+
+        sortedCategories.forEach((cat, catIndex) => {
             const cleanCatName = cat.substring(2);
             pages.push(<CoverPage key={`cover-${cat}`} title={cleanCatName} isMain={false} colorIndex={catIndex + 1} />);
             
-            // --- Lógica Masonry (Duas Colunas Fluídas sem Estouro) ---
+            // --- O Motor Avançado de Paginação (Sem Limite de Itens) ---
             let allItemsToProcess = [...grouped[cat]];
-            let lastColorIdx = -1;
-            const authorColorMap = {};
-            const MAX_HEIGHT_MM = 240; // Margem de segurança máxima (não toca no rodapé)
+            const MAX_HEIGHT_MM = 240; // Espaço útil da A4 (não encosta no footer)
+            const ROW_GAP = 6;
 
             while (allItemsToProcess.length > 0) {
-                let col1 = [], col2 = [];
-                let h1 = 0, h2 = 0;
+                let currentPageItems = [];
+                let currentHeight = 0;
 
+                // Processa a Linha (1 ou 2 itens da grelha)
                 while (allItemsToProcess.length > 0) {
-                    let item = allItemsToProcess[0]; // Espreitar o próximo
-                    let itemH = estimateItemHeight(item);
+                    let i1 = allItemsToProcess[0];
+                    let i2 = allItemsToProcess[1]; 
 
-                    // Se adicionar o item à coluna mais curta estourar a página, QUEBRA de Página!
-                    if (Math.min(h1, h2) + itemH > MAX_HEIGHT_MM) {
+                    let h1 = estimateItemHeight(i1);
+                    let h2 = i2 ? estimateItemHeight(i2) : 0;
+                    let rowHeight = Math.max(h1, h2) + ROW_GAP;
+
+                    // Se estourar a folha, Quebra a Página!
+                    if (currentHeight + rowHeight > MAX_HEIGHT_MM && currentPageItems.length > 0) {
                         break;
                     }
 
-                    // Se couber, retira da lista e insere na coluna mais curta
-                    item = allItemsToProcess.shift();
-                    if (h1 <= h2) { col1.push(item); h1 += itemH; } 
-                    else { col2.push(item); h2 += itemH; }
+                    currentPageItems.push(allItemsToProcess.shift());
+                    if (i2) currentPageItems.push(allItemsToProcess.shift());
+                    currentHeight += rowHeight;
                 }
 
-                if (col1.length > 0 || col2.length > 0) {
+                if (currentPageItems.length > 0) {
                     const currentPage = pageCounter;
                     
-                    // Lógica do Dicionário (Primeira e Última Letra da Página)
-                    let firstItem = col1[0] || col2[0];
-                    let lastItem = col2[col2.length-1] || col1[col1.length-1];
+                    let firstItem = currentPageItems[0];
+                    let lastItem = currentPageItems[currentPageItems.length-1];
                     const getDictLetter = (str) => {
                         if (!str) return '?';
                         const char = str.charAt(0).toUpperCase();
@@ -533,7 +551,6 @@ export default function App() {
                     const lastLetter = getDictLetter(getSortKey(lastItem));
                     const dictStr = firstLetter === lastLetter ? firstLetter : `${firstLetter} - ${lastLetter}`;
 
-                    // Renderiza a Página com as Duas Colunas Masonry
                     pages.push(
                         <div className="pdf-page" key={`page-${cat}-${currentPage}`}>
                             <div className="page-header">
@@ -541,29 +558,12 @@ export default function App() {
                                 <span>{dictStr}</span>
                             </div>
                             
-                            <div className="masonry-layout">
-                                <div className="masonry-col">
-                                    {col1.map((item, idx) => {
-                                        const authKey = getSortKey(item);
-                                        if (authorColorMap[authKey] === undefined) {
-                                            let nextColor = (lastColorIdx + 1) % 3;
-                                            authorColorMap[authKey] = nextColor;
-                                            lastColorIdx = nextColor;
-                                        }
-                                        return <ItemCard key={`c1-${idx}`} item={item} accentColor={colorPalette[authorColorMap[authKey]]} />;
-                                    })}
-                                </div>
-                                <div className="masonry-col">
-                                    {col2.map((item, idx) => {
-                                        const authKey = getSortKey(item);
-                                        if (authorColorMap[authKey] === undefined) {
-                                            let nextColor = (lastColorIdx + 1) % 3;
-                                            authorColorMap[authKey] = nextColor;
-                                            lastColorIdx = nextColor;
-                                        }
-                                        return <ItemCard key={`c2-${idx}`} item={item} accentColor={colorPalette[authorColorMap[authKey]]} />;
-                                    })}
-                                </div>
+                            <div className="catalog-grid">
+                                {currentPageItems.map((item, idx) => {
+                                    const authKey = getSortKey(item);
+                                    const itemColor = colorPalette[authorColorMap[authKey]];
+                                    return <ItemCard key={`item-${currentPage}-${idx}`} item={item} accentColor={itemColor} />;
+                                })}
                             </div>
                             
                             <div className="page-footer"><span></span><span>{currentPage}</span></div>
@@ -574,27 +574,56 @@ export default function App() {
             }
         });
 
-        // Dashboard de Estatísticas (6 Gráficos)
         pages.push(
-            <div className="pdf-page" key="stats-page">
-                <div className="page-header"><span className="vcr-font">Estatísticas</span><span>Visão Geral</span></div>
+            <div className="pdf-page" key="stats-page-1">
+                <div className="page-header"><span className="vcr-font">Estatísticas 1/2</span><span>Visão Geral</span></div>
                 
                 <h2 style={{ fontWeight: 300, fontSize: '2em', marginBottom: '15px', marginTop: '5px' }}>Visão Geral do Acervo</h2>
                 
                 <div className="stats-header-bar">
-                    <div className="stat-block"><div className="stat-num">{aggregates.p}</div><div className="stat-lbl">Páginas Lidas</div></div>
-                    <div className="stat-block"><div className="stat-num">{aggregates.f}</div><div className="stat-lbl">Faixas Ouvidas</div></div>
-                    <div className="stat-block"><div className="stat-num">{aggregates.m}</div><div className="stat-lbl">Min. Assistidos</div></div>
-                    <div className="stat-block"><div className="stat-num">{aggregates.h}</div><div className="stat-lbl">Horas Jogadas</div></div>
+                    <div className="stat-block">
+                        <div className="stat-num">{aggregates.pTot}</div>
+                        <span className="stat-sub">{aggregates.pPct}% Lidas</span>
+                        <div className="stat-lbl">Páginas Totais</div>
+                    </div>
+                    <div className="stat-block">
+                        <div className="stat-num">{aggregates.fTot}</div>
+                        <span className="stat-sub">{aggregates.fPct}% Ouvidas</span>
+                        <div className="stat-lbl">Faixas Totais</div>
+                    </div>
+                    <div className="stat-block">
+                        <div className="stat-num">{aggregates.mTot}</div>
+                        <span className="stat-sub">{aggregates.mPct}% Assist.</span>
+                        <div className="stat-lbl">Minutos de Vídeo</div>
+                    </div>
+                    <div className="stat-block">
+                        <div className="stat-num">{aggregates.hTot}</div>
+                        <span className="stat-sub">{aggregates.hPct}% Jogadas</span>
+                        <div className="stat-lbl">Horas de Game</div>
+                    </div>
                 </div>
 
                 <div className="stats-grid">
                     <div className="chart-card"><h3>Divisão por Suporte</h3><div className="chart-container"><canvas ref={chartTypeRef}></canvas></div></div>
                     <div className="chart-card"><h3>Status de Consumo</h3><div className="chart-container"><canvas ref={chartStatusRef}></canvas></div></div>
                     <div className="chart-card"><h3>Distribuição de Notas</h3><div className="chart-container"><canvas ref={chartRatingRef}></canvas></div></div>
-                    <div className="chart-card"><h3>Décadas de Lançamento</h3><div className="chart-container"><canvas ref={chartDecadeRef}></canvas></div></div>
-                    <div className="chart-card"><h3>Top 5 Autores/Desenv.</h3><div className="chart-container"><canvas ref={chartAuthorRef}></canvas></div></div>
-                    <div className="chart-card"><h3>Top 5 Editoras/Gravadoras</h3><div className="chart-container"><canvas ref={chartPubRef}></canvas></div></div>
+                    <div className="chart-card"><h3>Lançamento Ano a Ano</h3><div className="chart-container"><canvas ref={chartDecadeRef}></canvas></div></div>
+                </div>
+
+                <div className="page-footer"><span></span><span>{pageCounter}</span></div>
+            </div>
+        );
+        pageCounter++;
+
+        pages.push(
+            <div className="pdf-page" key="stats-page-2">
+                <div className="page-header"><span className="vcr-font">Estatísticas 2/2</span><span>Os Maiores</span></div>
+                
+                <h2 style={{ fontWeight: 300, fontSize: '2em', marginBottom: '15px', marginTop: '5px' }}>Top Autores e Produtoras</h2>
+                
+                <div className="stats-grid" style={{ gridTemplateColumns: '1fr', gap: '20px' }}>
+                    <div className="chart-card"><h3>Top 10 Autores/Desenvolvedoras</h3><div className="chart-container" style={{ height: '220px' }}><canvas ref={chartAuthorRef}></canvas></div></div>
+                    <div className="chart-card"><h3>Top 10 Editoras/Gravadoras/Produtoras</h3><div className="chart-container" style={{ height: '220px' }}><canvas ref={chartPubRef}></canvas></div></div>
                 </div>
 
                 <div className="page-footer"><span></span><span>{pageCounter}</span></div>
@@ -604,7 +633,6 @@ export default function App() {
         return pages;
     }, [csvData, ownerName, aggregates]);
 
-    // Motor de Renderização dos 6 Gráficos
     useEffect(() => {
         const instances = [];
 
@@ -615,9 +643,13 @@ export default function App() {
             const catCount = {};
             const statusCount = {};
             const ratingCount = { 'Nota 5': 0, 'Nota 4': 0, 'Nota 3': 0, 'Nota 2': 0, 'Nota 1': 0 }; 
+            
             const authorCount = {};
             const pubCount = {};
-            const decadeCount = {};
+            const yearCount = {};
+            
+            const seenWorksByAuthor = new Set();
+            const seenWorksByPub = new Set();
 
             csvData.forEach(item => {
                 const catInfo = getCategoryInfo(item['Tipo']);
@@ -637,22 +669,35 @@ export default function App() {
                 else if (nota >= 2) ratingCount['Nota 2']++;
                 else if (nota > 0) ratingCount['Nota 1']++;
 
+                const baseWork = getBaseWork(item['Título']);
                 const autor = safeString(item['Autor/Desenvolvedor']).trim();
-                if(autor && autor.toLowerCase() !== 'various') authorCount[autor] = (authorCount[autor] || 0) + 1;
-
                 const publisher = safeString(item['Editora/Gravadora'] || item['Produtora'] || item['Desenvolvedora']).trim();
-                if(publisher) pubCount[publisher] = (pubCount[publisher] || 0) + 1;
+
+                if (autor && autor.toLowerCase() !== 'various') {
+                    const authorWorkKey = `${autor}|||${baseWork}`;
+                    if (!seenWorksByAuthor.has(authorWorkKey)) {
+                        seenWorksByAuthor.add(authorWorkKey);
+                        authorCount[autor] = (authorCount[autor] || 0) + 1;
+                    }
+                }
+
+                if (publisher) {
+                    const pubWorkKey = `${publisher}|||${baseWork}`;
+                    if (!seenWorksByPub.has(pubWorkKey)) {
+                        seenWorksByPub.add(pubWorkKey);
+                        pubCount[publisher] = (pubCount[publisher] || 0) + 1;
+                    }
+                }
 
                 const ano = parseInt(safeString(item['Ano']), 10);
                 if (!isNaN(ano) && ano > 1000) {
-                    const decada = Math.floor(ano / 10) * 10 + 's';
-                    decadeCount[decada] = (decadeCount[decada] || 0) + 1;
+                    yearCount[ano] = (yearCount[ano] || 0) + 1;
                 }
             });
 
-            const sortedAuthors = Object.entries(authorCount).sort((a, b) => b[1] - a[1]).slice(0, 5);
-            const sortedPubs = Object.entries(pubCount).sort((a, b) => b[1] - a[1]).slice(0, 5);
-            const sortedDecades = Object.entries(decadeCount).sort((a, b) => a[0].localeCompare(b[0]));
+            const sortedAuthors = Object.entries(authorCount).sort((a, b) => b[1] - a[1]).slice(0, 10);
+            const sortedPubs = Object.entries(pubCount).sort((a, b) => b[1] - a[1]).slice(0, 10);
+            const sortedYears = Object.entries(yearCount).sort((a, b) => parseInt(a[0]) - parseInt(b[0]));
             
             const paletteStrict = ['#FF007F', '#008B8B', '#C5A059', '#FFFFFF', '#000000'];
 
@@ -676,19 +721,19 @@ export default function App() {
 
             instances.push(new window.Chart(chartDecadeRef.current, {
                 type: 'line',
-                data: { labels: sortedDecades.map(a => a[0]), datasets: [{ data: sortedDecades.map(a => a[1]), borderColor: '#C5A059', backgroundColor: 'rgba(197, 160, 89, 0.2)', fill: true, tension: 0.3 }] },
-                options: { animation: false, responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+                data: { labels: sortedYears.map(a => a[0]), datasets: [{ data: sortedYears.map(a => a[1]), borderColor: '#C5A059', backgroundColor: 'rgba(197, 160, 89, 0.2)', fill: true, tension: 0.2 }] },
+                options: { animation: false, responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { maxRotation: 45, minRotation: 45 } } } }
             }));
 
             instances.push(new window.Chart(chartAuthorRef.current, {
                 type: 'bar',
-                data: { labels: sortedAuthors.map(a => a[0].length > 15 ? a[0].substring(0, 15) + '...' : a[0]), datasets: [{ data: sortedAuthors.map(a => a[1]), backgroundColor: '#FF007F', borderRadius: 4 }] },
+                data: { labels: sortedAuthors.map(a => a[0].length > 25 ? a[0].substring(0, 25) + '...' : a[0]), datasets: [{ data: sortedAuthors.map(a => a[1]), backgroundColor: '#FF007F', borderRadius: 4 }] },
                 options: { indexAxis: 'y', animation: false, responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
             }));
 
             instances.push(new window.Chart(chartPubRef.current, {
                 type: 'bar',
-                data: { labels: sortedPubs.map(a => a[0].length > 15 ? a[0].substring(0, 15) + '...' : a[0]), datasets: [{ data: sortedPubs.map(a => a[1]), backgroundColor: '#222222', borderRadius: 4 }] },
+                data: { labels: sortedPubs.map(a => a[0].length > 25 ? a[0].substring(0, 25) + '...' : a[0]), datasets: [{ data: sortedPubs.map(a => a[1]), backgroundColor: '#222222', borderRadius: 4 }] },
                 options: { indexAxis: 'y', animation: false, responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
             }));
         }
@@ -702,43 +747,45 @@ export default function App() {
 
     return (
         <ErrorBoundary>
-            <style dangerouslySetInnerHTML={{ __html: globalCSS }} />
+            <>
+                <style dangerouslySetInnerHTML={{ __html: globalCSS }} />
 
-            {viewMode === 'upload' && (
-                <div className="app-ui no-print">
-                    <h1>Catálogo Editorial</h1>
-                    <p>Importe a sua coleção em formato CSV. O layout editorial será gerado fluidamente para a máxima otimização de espaço em A4.</p>
-                    
-                    <input type="file" ref={fileInputRef} accept=".csv" style={{ display: 'none' }} onChange={handleFileUpload} />
-                    
-                    <div className="upload-area" onClick={() => fileInputRef.current?.click()}>
-                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#888" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-                        <h3 style={{ fontWeight: 400, color: '#333' }}>{fileName ? fileName : 'Selecione a sua folha de cálculo .csv'}</h3>
+                {viewMode === 'upload' && (
+                    <div className="app-ui no-print">
+                        <h1>Catálogo Editorial</h1>
+                        <p>Importe a sua coleção em formato CSV. O layout editorial será gerado fluidamente para a máxima otimização de espaço em A4.</p>
+                        
+                        <input type="file" ref={fileInputRef} accept=".csv" style={{ display: 'none' }} onChange={handleFileUpload} />
+                        
+                        <div className="upload-area" onClick={() => fileInputRef.current?.click()}>
+                            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#888" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                            <h3 style={{ fontWeight: 400, color: '#333' }}>{fileName ? fileName : 'Selecione a sua folha de cálculo .csv'}</h3>
+                        </div>
+
+                        <div style={{ marginBottom: '30px' }}>
+                            <label htmlFor="owner-name" style={{ fontSize: '0.85em', color: '#666', textTransform: 'uppercase', letterSpacing: '1px' }}>Dono da Coleção</label>
+                            <input type="text" id="owner-name" placeholder="Nome na capa..." value={ownerName} onChange={(e) => setOwnerName(e.target.value)}
+                                style={{ width: '100%', padding: '12px 0', border: 'none', borderBottom: '1px solid #ccc', background: 'transparent', outline: 'none', fontSize: '1.1em', fontFamily: 'inherit' }} 
+                            />
+                        </div>
+
+                        <button className="primary-btn" onClick={() => setViewMode('preview')} disabled={csvData.length === 0}>
+                            {csvData.length === 0 ? 'A Aguardar Ficheiro...' : 'Gerar e Visualizar Catálogo'}
+                        </button>
                     </div>
+                )}
 
-                    <div style={{ marginBottom: '30px' }}>
-                        <label htmlFor="owner-name" style={{ fontSize: '0.85em', color: '#666', textTransform: 'uppercase', letterSpacing: '1px' }}>Dono da Coleção</label>
-                        <input type="text" id="owner-name" placeholder="Nome na capa..." value={ownerName} onChange={(e) => setOwnerName(e.target.value)}
-                            style={{ width: '100%', padding: '12px 0', border: 'none', borderBottom: '1px solid #ccc', background: 'transparent', outline: 'none', fontSize: '1.1em', fontFamily: 'inherit' }} 
-                        />
+                {viewMode === 'preview' && (
+                    <div className="preview-wrapper">
+                        <div className="floating-bar no-print">
+                            <button onClick={() => setViewMode('upload')}>← Voltar</button>
+                            <button className="print-btn" onClick={handlePrint}>Guardar PDF / Imprimir</button>
+                        </div>
+
+                        {pdfPages}
                     </div>
-
-                    <button className="primary-btn" onClick={() => setViewMode('preview')} disabled={csvData.length === 0}>
-                        {csvData.length === 0 ? 'A Aguardar Ficheiro...' : 'Gerar e Visualizar Catálogo'}
-                    </button>
-                </div>
-            )}
-
-            {viewMode === 'preview' && (
-                <div className="preview-wrapper">
-                    <div className="floating-bar no-print">
-                        <button onClick={() => setViewMode('upload')}>← Voltar</button>
-                        <button className="print-btn" onClick={handlePrint}>Guardar PDF / Imprimir</button>
-                    </div>
-
-                    {pdfPages}
-                </div>
-            )}
+                )}
+            </>
         </ErrorBoundary>
     );
 }
