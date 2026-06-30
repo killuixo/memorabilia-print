@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 
+// Barreira de erros para evitar Tela Branca
 class ErrorBoundary extends React.Component {
     constructor(props) { super(props); this.state = { hasError: false, errorInfo: null }; }
     static getDerivedStateFromError(error) { return { hasError: true, errorInfo: error }; }
@@ -43,6 +44,7 @@ const globalCSS = `
       print-color-adjust: exact !important;
   }
 
+  /* ------------- INTERFACE DE UTILIZADOR ------------- */
   .app-ui {
       max-width: 600px; margin: 10vh auto; background: var(--white);
       padding: 40px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);
@@ -63,6 +65,7 @@ const globalCSS = `
   button.primary-btn:hover:not(:disabled) { background: var(--pink); }
   button.primary-btn:disabled { background: #d0d0d0; cursor: not-allowed; }
 
+  /* ------------- VISUALIZADOR ------------- */
   .preview-wrapper { padding: 40px 0; display: flex; flex-direction: column; align-items: center; gap: 30px; }
   
   .floating-bar {
@@ -73,7 +76,7 @@ const globalCSS = `
   .floating-bar button { background: white; color: black; border: none; padding: 10px 20px; border-radius: 20px; font-weight: bold; cursor: pointer; }
   .floating-bar button.print-btn { background: var(--cyan); color: white;}
 
-  /* PÁGINA A4 E CABEÇALHOS */
+  /* ------------- PÁGINA A4 ------------- */
   .pdf-page {
       width: 210mm; height: 297mm; background: var(--white); position: relative;
       padding: 20mm 15mm 20mm 15mm; box-sizing: border-box; overflow: hidden;
@@ -92,7 +95,7 @@ const globalCSS = `
       border-top: 1px solid #eee; padding-top: 5px;
   }
 
-  /* CAPA COM FONTES RETRÔ */
+  /* ------------- CAPAS E FONTES RETRÔ ------------- */
   .vcr-font { font-family: 'VT323', monospace; }
   
   .cover-page { 
@@ -100,7 +103,7 @@ const globalCSS = `
       height: 100%; padding-left: 15mm; position: relative; z-index: 10;
   }
   
-  .cover-subtitle { font-size: 1.2em; font-weight: 400; margin: 0 0 5px 0; color: var(--gray); text-transform: uppercase; letter-spacing: 1px;}
+  .cover-subtitle { font-size: 1.5em; font-weight: 300; margin: 0 0 5px 0; color: var(--gray); text-transform: uppercase; letter-spacing: 0px;}
   
   .category-title { 
       font-size: 6.5em; margin: 0; line-height: 1; letter-spacing: 2px; text-transform: uppercase;
@@ -121,7 +124,7 @@ const globalCSS = `
   .m-line-h { position: absolute; height: 4px; background: var(--black); left: 0; right: 0; }
   .m-block { position: absolute; }
 
-  /* GRELHA GRID PERFEITA DA ESQUERDA PARA A DIREITA */
+  /* ------------- GRELHA GRID PERFEITA DA ESQUERDA PARA A DIREITA ------------- */
   .catalog-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -169,11 +172,13 @@ const globalCSS = `
   .star { width: 13px; height: 13px; }
   .star-giant { width: 32px; height: 32px; filter: drop-shadow(0px 3px 5px rgba(0,0,0,0.3)); margin-bottom: 4px; }
 
+  /* ------------- FICHA CATALOGRÁFICA ------------- */
   .catalog-ficha { font-size: 0.65em; display: flex; flex-direction: column; gap: 3px; margin-top: 4px; clear: none; }
   .ficha-row { display: flex; flex-direction: row; gap: 4px; line-height: 1.3; }
   .ficha-label { font-weight: 600; color: var(--gray); text-transform: uppercase; white-space: nowrap; font-size: 0.9em;}
   .ficha-value { font-weight: 700; color: var(--black); word-break: break-word; }
 
+  /* ------------- ESTATÍSTICAS ------------- */
   .stats-header-bar {
       display: flex; justify-content: space-between; background: var(--black); color: white;
       padding: 10px 15px; border-radius: 8px; margin-bottom: 15px;
@@ -188,6 +193,7 @@ const globalCSS = `
   .chart-card h3 { font-size: 0.75em; text-transform: uppercase; color: var(--black); margin-top: 0; margin-bottom: 8px; text-align: center; font-weight: 800; }
   .chart-container { height: 160px; width: 100%; }
 
+  /* ------------- REGRAS DE IMPRESSÃO NATIVA ------------- */
   @media print {
       body, html { background-color: var(--white) !important; margin: 0; padding: 0; height: auto !important; }
       .no-print { display: none !important; }
@@ -212,6 +218,7 @@ const useExternalScripts = () => {
     return loaded;
 };
 
+// Ícones Customizados
 const StarIcon = ({ filled, color }) => (
     <svg className="star" viewBox="0 0 24 24" fill={filled ? color : "none"} stroke={filled ? color : "#aaa"} strokeWidth="2">
         <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
@@ -253,10 +260,10 @@ const getBaseWork = (title) => {
     return safeString(title).split(/[:\-]/)[0].trim().toLowerCase() || 'desconhecido';
 };
 
-// Cálculo preciso para encaixar o máximo de itens sem invadir o rodapé
+// Estimativa Matemática de Altura p/ Grelha
 const estimateItemHeight = (item) => {
     let nota = parseFloat(safeString(item['Nota']).replace(',', '.'));
-    let h = 8; // Margem e borders minimas em mm
+    let h = 8; 
 
     let titleLen = safeString(item['Título']).length;
     h += Math.ceil(titleLen / 30) * 4.5; 
@@ -264,7 +271,7 @@ const estimateItemHeight = (item) => {
     let autor = safeString(item['Autor/Desenvolvedor']).trim();
     if (autor && autor.toLowerCase() !== 'various') h += 4.5;
 
-    h += 4.5; // Espaço das estrelas
+    h += 4.5; 
 
     let rows = 0;
     if (item['Tipo']) rows++;
@@ -275,9 +282,9 @@ const estimateItemHeight = (item) => {
     h += rows * 3.5; 
 
     let hasCover = safeString(item['URL da Capa']).trim() !== '';
-    if (hasCover) h = Math.max(h, 32); // A capa obriga a caixa a ter pelo menos ~32mm
+    if (hasCover) h = Math.max(h, 32); 
     
-    if (nota === 5) h += 8; // Margem da estrela gigante e sombra
+    if (nota === 5) h += 8; 
 
     return h; 
 };
@@ -465,7 +472,7 @@ export default function App() {
         if (!csvData.length) return [];
         
         const pages = [];
-        let pageCounter = 1;
+        let pageCounter = 1; 
         const dateStr = new Date().toLocaleDateString('pt-PT');
 
         const grouped = {};
@@ -479,7 +486,6 @@ export default function App() {
         const sortedCategories = Object.keys(grouped).sort();
         const colorPalette = ['var(--pink)', 'var(--cyan)', 'var(--gold)'];
 
-        // Pré-calcular Lógica Anti-Colisão Rigorosa
         let globalPrevColor = -1;
         const authorColorMap = {};
 
@@ -503,22 +509,42 @@ export default function App() {
             });
         });
 
+        // 1. CAPA PRINCIPAL (Não conta número visível no rodapé, mas é a página 1)
         pages.push(<CoverPage key="main-cover" isMain={true} ownerName={ownerName} dateStr={dateStr} colorIndex={Math.floor(Math.random()*3)} />);
+        
+        const tocIndex = pages.length; // Guarda o local onde o SUMÁRIO será inserido
+        pageCounter++; // O Sumário será a página 2
+        
+        const tocData = [];
 
         sortedCategories.forEach((cat, catIndex) => {
             const cleanCatName = cat.substring(2);
-            pages.push(<CoverPage key={`cover-${cat}`} title={cleanCatName} isMain={false} colorIndex={catIndex + 1} />);
+            const catItems = grouped[cat];
             
-            // --- O Motor Avançado de Paginação (Sem Limite de Itens) ---
+            // Dados para o Sumário
+            const firstId = catItems[0]['Código Arquivístico'] || 'S/N';
+            const lastId = catItems[catItems.length - 1]['Código Arquivístico'] || 'S/N';
+            tocData.push({
+                category: cleanCatName,
+                startPage: pageCounter,
+                count: catItems.length,
+                firstId,
+                lastId
+            });
+
+            // Folha de Rosto da Categoria
+            pages.push(<CoverPage key={`cover-${cat}`} title={cleanCatName} isMain={false} colorIndex={catIndex + 1} />);
+            pageCounter++;
+            
+            // Paginação dos Itens
             let allItemsToProcess = [...grouped[cat]];
-            const MAX_HEIGHT_MM = 240; // Espaço útil da A4 (não encosta no footer)
+            const MAX_HEIGHT_MM = 240; 
             const ROW_GAP = 6;
 
             while (allItemsToProcess.length > 0) {
                 let currentPageItems = [];
                 let currentHeight = 0;
 
-                // Processa a Linha (1 ou 2 itens da grelha)
                 while (allItemsToProcess.length > 0) {
                     let i1 = allItemsToProcess[0];
                     let i2 = allItemsToProcess[1]; 
@@ -527,7 +553,6 @@ export default function App() {
                     let h2 = i2 ? estimateItemHeight(i2) : 0;
                     let rowHeight = Math.max(h1, h2) + ROW_GAP;
 
-                    // Se estourar a folha, Quebra a Página!
                     if (currentHeight + rowHeight > MAX_HEIGHT_MM && currentPageItems.length > 0) {
                         break;
                     }
@@ -574,6 +599,7 @@ export default function App() {
             }
         });
 
+        // ESTATÍSTICAS
         pages.push(
             <div className="pdf-page" key="stats-page-1">
                 <div className="page-header"><span className="vcr-font">Estatísticas 1/2</span><span>Visão Geral</span></div>
@@ -629,6 +655,53 @@ export default function App() {
                 <div className="page-footer"><span></span><span>{pageCounter}</span></div>
             </div>
         );
+
+        // 2. CRIAÇÃO DA PÁGINA DO SUMÁRIO E INSERÇÃO
+        const tocPage = (
+            <div className="pdf-page" key="toc-page">
+                <div className="mondrian-decor">
+                    <div className="m-line-v" style={{ left: '15mm', backgroundColor: 'var(--black)' }}></div>
+                    <div className="m-line-h" style={{ top: '30mm', backgroundColor: 'var(--black)' }}></div>
+                    <div className="m-block" style={{ top: '15mm', left: '15mm', width: '10mm', height: '15mm', backgroundColor: 'var(--pink)' }}></div>
+                </div>
+                
+                <div style={{ paddingLeft: '15mm', paddingTop: '15mm', position: 'relative', zIndex: 10, paddingRight: '15mm' }}>
+                    <h1 className="vcr-font" style={{ fontSize: '4.5em', margin: 0, textTransform: 'uppercase', letterSpacing: '2px', WebkitTextStroke: '2px var(--black)', color: 'var(--white)' }}>Sumário</h1>
+                    <h2 style={{ fontSize: '1.2em', fontWeight: 700, color: 'var(--gray)', textTransform: 'uppercase', marginBottom: '30px', borderBottom: '4px solid var(--black)', paddingBottom: '10px' }}>Índice Sistemático de Suportes Físicos</h2>
+                    
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                        {tocData.map((data, index) => {
+                            const accent = colorPalette[index % 3];
+                            return (
+                                <div key={index} style={{ 
+                                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                                    border: '4px solid var(--black)', borderLeftWidth: '12px', borderLeftStyle: 'solid', borderLeftColor: accent,
+                                    padding: '15px 25px', background: 'var(--white)',
+                                    boxShadow: '4px 4px 0px rgba(0,0,0,0.1)'
+                                }}>
+                                    <div>
+                                        <h3 className="vcr-font" style={{ fontSize: '2.5em', margin: 0, textTransform: 'uppercase', color: 'var(--black)' }}>{data.category}</h3>
+                                        <div style={{ fontSize: '0.75em', color: 'var(--gray)', textTransform: 'uppercase', fontWeight: 800, marginTop: '5px' }}>
+                                            <span style={{ color: 'var(--black)' }}>Volumetria:</span> {data.count} Itens <br/>
+                                            <span style={{ color: 'var(--black)' }}>Espectro Arq.:</span> {data.firstId} ➔ {data.lastId}
+                                        </div>
+                                    </div>
+                                    <div className="vcr-font" style={{ fontSize: '4em', color: accent, WebkitTextStroke: '2px var(--black)', textShadow: '4px 4px 0px rgba(0,0,0,0.1)' }}>
+                                        {String(data.startPage).padStart(2, '0')}
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+                
+                {/* O Sumário é a página 2, mas geralmente sumários não recebem numeração de página visível na base. 
+                    Vamos manter o estilo da folha de rosto. */}
+                <div className="page-footer"><span></span><span></span></div>
+            </div>
+        );
+
+        pages.splice(tocIndex, 0, tocPage);
 
         return pages;
     }, [csvData, ownerName, aggregates]);
