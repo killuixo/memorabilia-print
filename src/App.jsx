@@ -1,5 +1,22 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 
+// Barreira de erros para evitar Tela Branca se o CSV estiver malformado
+class ErrorBoundary extends React.Component {
+    constructor(props) { super(props); this.state = { hasError: false, errorInfo: null }; }
+    static getDerivedStateFromError(error) { return { hasError: true, errorInfo: error }; }
+    render() {
+        if (this.state.hasError) {
+            return <div style={{ padding: 40, color: '#FF007F', textAlign: 'center', fontFamily: 'sans-serif' }}>
+                <h2>Erro Crítico ao Processar o Catálogo</h2>
+                <p>Ocorreu uma falha ao ler os dados do seu CSV. O erro exato foi:</p>
+                <code style={{ background: '#eee', padding: 10, display: 'block', borderRadius: 5 }}>{this.state.errorInfo.toString()}</code>
+                <button onClick={() => window.location.reload()} style={{ marginTop: 20, padding: '10px 20px', cursor: 'pointer' }}>Recarregar Aplicativo</button>
+            </div>;
+        }
+        return this.props.children;
+    }
+}
+
 const globalCSS = `
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&family=VT323&display=swap');
 
@@ -82,20 +99,20 @@ const globalCSS = `
       height: 100%; padding-left: 15mm; position: relative; z-index: 10;
   }
   
-  .cover-subtitle { font-size: 2em; font-weight: 300; margin: 0 0 10px 0; color: var(--gray); text-transform: uppercase; letter-spacing: -0.5px;}
+  .cover-subtitle { font-size: 2.2em; font-weight: 300; margin: 0 0 15px 0; color: var(--gray); text-transform: uppercase; letter-spacing: -0.5px;}
   
   .category-title { 
-      font-size: 6em; margin: 0; line-height: 1; letter-spacing: 2px; text-transform: uppercase;
+      font-size: 6.5em; margin: 0; line-height: 1; letter-spacing: 2px; text-transform: uppercase;
       -webkit-text-stroke: 3px currentColor;
   }
 
   .cover-owner { 
-      font-size: 8em; margin: 0; line-height: 0.9;
+      font-size: 9.5em; margin: 0; line-height: 0.9;
       background: linear-gradient(135deg, var(--pink) 0%, var(--cyan) 50%, var(--gold) 100%);
       -webkit-background-clip: text;
       color: transparent;
       -webkit-text-stroke: 2px var(--black);
-      filter: drop-shadow(4px 4px 0px rgba(0,0,0,0.1));
+      filter: drop-shadow(5px 5px 0px rgba(0,0,0,0.15));
   }
 
   .mondrian-decor { position: absolute; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; z-index: 1; }
@@ -108,7 +125,7 @@ const globalCSS = `
       display: grid;
       grid-template-columns: 1fr 1fr;
       column-gap: 12mm;
-      row-gap: 7mm; /* Espaço otimizado para 5 linhas */
+      row-gap: 7.5mm; /* Espaçamento ideal para 10 itens (5 linhas) */
       height: 245mm;
       align-content: start;
       align-items: start;
@@ -163,9 +180,9 @@ const globalCSS = `
       display: flex; justify-content: space-between; background: var(--black); color: white;
       padding: 15px 20px; border-radius: 8px; margin-bottom: 30px;
   }
-  .stat-block { text-align: center; }
-  .stat-num { font-size: 1.8em; font-weight: 800; color: var(--gold); line-height: 1; margin-bottom: 5px; font-family: 'VT323', monospace;}
-  .stat-lbl { font-size: 0.6em; text-transform: uppercase; letter-spacing: 1px; color: #ccc;}
+  .stat-block { text-align: center; width: 25%; }
+  .stat-num { font-size: 2.5em; font-weight: 800; color: var(--gold); line-height: 1; margin-bottom: 5px; font-family: 'VT323', monospace; text-shadow: 2px 2px 0 #000;}
+  .stat-lbl { font-size: 0.65em; text-transform: uppercase; letter-spacing: 1px; color: #ccc;}
 
   .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; width: 100%; }
   .chart-card { background: var(--white); border: 2px solid #eee; border-radius: 8px; padding: 15px; }
@@ -177,7 +194,6 @@ const globalCSS = `
       body, html { background-color: var(--white) !important; margin: 0; padding: 0; height: auto !important; }
       .no-print { display: none !important; }
       @page { size: A4 portrait; margin: 0; }
-      /* Previne que o Flexbox corte o PDF */
       .preview-wrapper { display: block !important; padding: 0 !important; gap: 0 !important; }
       .pdf-page { margin: 0 !important; box-shadow: none !important; border: none !important; page-break-after: always !important; page-break-inside: avoid !important; }
   }
@@ -226,8 +242,11 @@ const GradientStarIcon = () => (
     </svg>
 );
 
+// Funções Utilitárias Blindadas (String conversion garante ausência de falhas)
+const safeString = (val) => (val === null || val === undefined) ? '' : String(val);
+
 const getCategoryInfo = (tipo) => {
-    const t = (tipo || '').toLowerCase().trim();
+    const t = safeString(tipo).toLowerCase().trim();
     if (['livro', 'quadrinho', 'revista', 'hq', 'mangá', 'hqs'].includes(t)) return '1 LIVROS';
     if (['vinil', 'cd', 'fita cassete', 'k7', 'lp', 'disco'].includes(t)) return '2 DISCOS';
     if (['vhs', 'dvd', 'blu-ray', 'filme', 'video', 'vídeo'].includes(t)) return '3 VÍDEO';
@@ -236,13 +255,14 @@ const getCategoryInfo = (tipo) => {
 };
 
 const getSortKey = (item) => {
-    const autor = (item['Autor/Desenvolvedor'] || '').trim();
+    if (!item) return '';
+    const autor = safeString(item['Autor/Desenvolvedor']).trim();
     if (autor && autor.toLowerCase() !== 'various') return autor;
-    return (item['Título'] || '').trim();
+    return safeString(item['Título']).trim();
 };
 
-const StarRating = ({ nota }) => {
-    let n = parseFloat((nota || '0').replace(',', '.'));
+const StarRating = ({ notaStr }) => {
+    let n = parseFloat(safeString(notaStr).replace(',', '.'));
     if (isNaN(n)) n = 0;
 
     if (n === 5) return <div className="stars-container"><GradientStarIcon /></div>;
@@ -295,19 +315,21 @@ const CoverPage = ({ title, isMain, ownerName, dateStr, colorIndex }) => {
     );
 };
 
-// Item sem o campo 'Descrição' para poupar espaço
+// Item formatado para Grid Perfeito (Descrição permanentemente omitida)
 const ItemCard = ({ item, accentColor }) => {
-    let nota = parseFloat((item['Nota'] || '0').replace(',', '.'));
+    let nota = parseFloat(safeString(item['Nota']).replace(',', '.'));
     if (isNaN(nota)) nota = 0;
     
     let isStar5 = nota === 5;
-    const cat = getCategoryInfo(item['Tipo']).substring(2);
+    const catInfo = getCategoryInfo(item['Tipo']);
+    const cat = catInfo ? catInfo.substring(2) : 'OUTROS';
 
-    const publisher = item['Editora/Gravadora'] || item['Produtora'] || item['Desenvolvedora'];
-    const timeVal = item['Páginas/Tempo'] || item['Faixas'] || item['Minutos'] || item['Horas'];
-    const autor = (item['Autor/Desenvolvedor'] || '').trim();
+    const publisher = safeString(item['Editora/Gravadora'] || item['Produtora'] || item['Desenvolvedora']);
+    const timeVal = safeString(item['Páginas/Tempo'] || item['Faixas'] || item['Minutos'] || item['Horas']);
+    const autor = safeString(item['Autor/Desenvolvedor']).trim();
 
-    let stat = item['Status'];
+    let stat = safeString(item['Status']);
+    // Regra especial para Discos e Filmes
     if (cat === 'DISCOS' || cat === 'VÍDEO') {
         stat = nota > 0 ? 'Concluído' : 'Não Iniciado';
     }
@@ -321,43 +343,37 @@ const ItemCard = ({ item, accentColor }) => {
     if(cat === 'GAMES') { pLabel = 'Desenv.'; tLabel = 'Horas'; }
     if(cat === 'VÍDEO') { pLabel = 'Produtora'; tLabel = 'Minutos'; }
 
+    const urlCapa = safeString(item['URL da Capa']).trim();
+    const codArq = safeString(item['Código Arquivístico']);
+    const titulo = safeString(item['Título']) || 'Sem Título';
+    const tipo = safeString(item['Tipo']);
+    const ano = safeString(item['Ano']);
+
     return (
         <div className={`catalog-item ${isStar5 ? 'star-5' : ''}`} style={{ borderLeftColor: accentColor }}>
             
-            {item['URL da Capa'] && item['URL da Capa'].trim() !== '' && (
+            {urlCapa !== '' && (
                 <div className="item-cover-box">
-                    <img src={item['URL da Capa']} alt="Capa" crossOrigin="anonymous" onError={(e) => { e.target.style.display = 'none'; e.target.parentNode.style.display = 'none'; }} />
+                    <img src={urlCapa} alt="Capa" crossOrigin="anonymous" onError={(e) => { e.target.style.display = 'none'; e.target.parentNode.style.display = 'none'; }} />
                 </div>
             )}
 
-            {item['Código Arquivístico'] && (
-                <div className="item-code">{item['Código Arquivístico']}</div>
-            )}
+            {codArq && <div className="item-code">{codArq}</div>}
 
-            <div className="item-title">{item['Título'] || 'Sem Título'}</div>
+            <div className="item-title">{titulo}</div>
             
             {autor && autor.toLowerCase() !== 'various' && cat !== 'GAMES' && (
                 <div className="item-author" style={{ color: accentColor }}>{autor}</div>
             )}
             
-            <StarRating nota={nota} />
+            <StarRating notaStr={safeString(item['Nota'])} />
 
             <div className="catalog-ficha">
-                {item['Tipo'] && (
-                    <div className="ficha-row"><span className="ficha-label">Tipo:</span><span className="ficha-value">{item['Tipo']}</span></div>
-                )}
-                {item['Ano'] && (
-                    <div className="ficha-row"><span className="ficha-label">Ano:</span><span className="ficha-value">{item['Ano']}</span></div>
-                )}
-                {publisher && (
-                    <div className="ficha-row"><span className="ficha-label">{pLabel}:</span><span className="ficha-value">{publisher}</span></div>
-                )}
-                {!isDisco && stat && (
-                    <div className="ficha-row"><span className="ficha-label">Status:</span><span className="ficha-value">{stat}</span></div>
-                )}
-                {timeVal && (
-                    <div className="ficha-row"><span className="ficha-label">{tLabel}:</span><span className="ficha-value">{timeVal}</span></div>
-                )}
+                {tipo && <div className="ficha-row"><span className="ficha-label">Tipo:</span><span className="ficha-value">{tipo}</span></div>}
+                {ano && <div className="ficha-row"><span className="ficha-label">Ano:</span><span className="ficha-value">{ano}</span></div>}
+                {publisher && <div className="ficha-row"><span className="ficha-label">{pLabel}:</span><span className="ficha-value">{publisher}</span></div>}
+                {!isDisco && stat && <div className="ficha-row"><span className="ficha-label">Status:</span><span className="ficha-value">{stat}</span></div>}
+                {timeVal && <div className="ficha-row"><span className="ficha-label">{tLabel}:</span><span className="ficha-value">{timeVal}</span></div>}
             </div>
         </div>
     );
@@ -371,7 +387,6 @@ export default function App() {
     const [viewMode, setViewMode] = useState('upload'); 
     
     const fileInputRef = useRef(null);
-    
     const chartTypeRef = useRef(null);
     const chartStatusRef = useRef(null);
     const chartRatingRef = useRef(null);
@@ -384,17 +399,26 @@ export default function App() {
             window.Papa.parse(file, {
                 header: true,
                 skipEmptyLines: true,
-                complete: (results) => setCsvData(results.data)
+                complete: (results) => {
+                    // Filtrar linhas completamente vazias que podem quebrar o sistema
+                    const validData = results.data.filter(row => safeString(row['Título']).trim() !== '' || safeString(row['Tipo']).trim() !== '');
+                    setCsvData(validData);
+                }
             });
         }
     };
 
-    // Cálculos seguros usando useMemo (Resolve o ecrã branco!)
+    // Cálculos de Agregação ultra-seguros
     const aggregates = useMemo(() => {
         let p = 0, f = 0, m = 0, h = 0;
         csvData.forEach(item => {
-            const cat = getCategoryInfo(item['Tipo']).substring(2);
-            const val = parseInt(item['Páginas/Tempo'] || item['Faixas'] || item['Minutos'] || item['Horas'] || 0);
+            const catInfo = getCategoryInfo(item['Tipo']);
+            const cat = catInfo ? catInfo.substring(2) : '';
+            
+            // Limpa qualquer texto, ponto ou vírgula antes de converter em inteiro
+            const rawVal = safeString(item['Páginas/Tempo'] || item['Faixas'] || item['Minutos'] || item['Horas']);
+            const val = parseInt(rawVal.replace(/\D/g, '') || '0', 10);
+            
             if (!isNaN(val)) {
                 if (cat === 'LIVROS') p += val;
                 if (cat === 'DISCOS') f += val;
@@ -414,7 +438,8 @@ export default function App() {
 
         const grouped = {};
         csvData.forEach(item => {
-            const cat = getCategoryInfo(item['Tipo']);
+            const catInfo = getCategoryInfo(item['Tipo']);
+            const cat = catInfo ? catInfo : '5 OUTROS';
             if (!grouped[cat]) grouped[cat] = [];
             grouped[cat].push(item);
         });
@@ -422,6 +447,7 @@ export default function App() {
         const sortedCategories = Object.keys(grouped).sort();
         const colorPalette = ['var(--pink)', 'var(--cyan)', 'var(--gold)'];
 
+        // Capa Principal
         pages.push(<CoverPage key="main-cover" isMain={true} ownerName={ownerName} dateStr={dateStr} colorIndex={0} />);
 
         sortedCategories.forEach((cat, catIndex) => {
@@ -438,7 +464,7 @@ export default function App() {
             const cleanCatName = cat.substring(2);
             pages.push(<CoverPage key={`cover-${cat}`} title={cleanCatName} isMain={false} colorIndex={catIndex + 1} />);
             
-            // Agora garantimos os 10 Itens por página!
+            // Layout perfeito de 10 Itens (5 linhas de 2 colunas)
             const itemsPerPage = 10; 
             for (let i = 0; i < grouped[cat].length; i += itemsPerPage) {
                 const chunk = grouped[cat].slice(i, i + itemsPerPage);
@@ -469,6 +495,7 @@ export default function App() {
                             {chunk.map((item, idx) => {
                                 const authKey = getSortKey(item);
                                 if (authorColorMap[authKey] === undefined) {
+                                    // Lógica Anti-Colisão
                                     let nextColor = (lastColorIdx + 1) % 3;
                                     authorColorMap[authKey] = nextColor;
                                     lastColorIdx = nextColor;
@@ -489,13 +516,13 @@ export default function App() {
             }
         });
 
+        // Dashboard de Estatísticas
         pages.push(
             <div className="pdf-page" key="stats-page">
                 <div className="page-header"><span className="vcr-font">Estatísticas</span><span>Visão Geral</span></div>
                 
                 <h2 style={{ fontWeight: 300, fontSize: '2em', marginBottom: '20px', marginTop: '10px' }}>Visão Geral do Acervo</h2>
                 
-                {/* Agora consome diretamente o estado calculado pelo React de forma segura */}
                 <div className="stats-header-bar">
                     <div className="stat-block"><div className="stat-num">{aggregates.p}</div><div className="stat-lbl">Páginas Lidas</div></div>
                     <div className="stat-block"><div className="stat-num">{aggregates.f}</div><div className="stat-lbl">Faixas Ouvidas</div></div>
@@ -538,17 +565,19 @@ export default function App() {
 
             const catCount = {};
             const statusCount = {};
+            // "Sem nota" removido, rastreia apenas as válidas
             const ratingCount = { 'Nota 5': 0, 'Nota 4': 0, 'Nota 3': 0, 'Nota 2': 0, 'Nota 1': 0 }; 
             const pubCount = {};
 
             csvData.forEach(item => {
                 const catInfo = getCategoryInfo(item['Tipo']);
-                const cat = catInfo.substring(2);
+                const cat = catInfo ? catInfo.substring(2) : 'OUTROS';
                 catCount[cat] = (catCount[cat] || 0) + 1;
                 
-                let nota = parseFloat((item['Nota'] || '0').replace(',', '.'));
-                
-                let stat = item['Status'] || 'Não Definido';
+                let nota = parseFloat(safeString(item['Nota']).replace(',', '.'));
+                if(isNaN(nota)) nota = 0;
+
+                let stat = safeString(item['Status']) || 'Não Definido';
                 if (cat === 'DISCOS' || cat === 'VÍDEO') {
                     stat = nota > 0 ? 'Concluído' : 'Não Iniciado';
                 }
@@ -560,9 +589,9 @@ export default function App() {
                 else if (nota >= 2) ratingCount['Nota 2']++;
                 else if (nota > 0) ratingCount['Nota 1']++;
 
-                const publisher = item['Editora/Gravadora'] || item['Produtora'] || item['Desenvolvedora'] || '';
-                if(publisher && publisher.trim() !== '') {
-                    pubCount[publisher.trim()] = (pubCount[publisher.trim()] || 0) + 1;
+                const publisher = safeString(item['Editora/Gravadora'] || item['Produtora'] || item['Desenvolvedora']).trim();
+                if(publisher && publisher !== '') {
+                    pubCount[publisher] = (pubCount[publisher] || 0) + 1;
                 }
             });
 
@@ -615,7 +644,7 @@ export default function App() {
     if (!scriptsLoaded) return <div style={{ padding: 40, textAlign: 'center' }}>A iniciar o sistema...</div>;
 
     return (
-        <>
+        <ErrorBoundary>
             <style dangerouslySetInnerHTML={{ __html: globalCSS }} />
 
             {viewMode === 'upload' && (
@@ -657,6 +686,6 @@ export default function App() {
                     {pdfPages}
                 </div>
             )}
-        </>
+        </ErrorBoundary>
     );
 }
