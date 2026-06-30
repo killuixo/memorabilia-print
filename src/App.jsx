@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 
-// Barreira de erros para evitar Tela Branca se o CSV estiver malformado
+// Barreira de erros para evitar Tela Branca
 class ErrorBoundary extends React.Component {
     constructor(props) { super(props); this.state = { hasError: false, errorInfo: null }; }
     static getDerivedStateFromError(error) { return { hasError: true, errorInfo: error }; }
@@ -8,7 +8,7 @@ class ErrorBoundary extends React.Component {
         if (this.state.hasError) {
             return <div style={{ padding: 40, color: '#FF007F', textAlign: 'center', fontFamily: 'sans-serif' }}>
                 <h2>Erro Crítico ao Processar o Catálogo</h2>
-                <p>Ocorreu uma falha ao ler os dados do seu CSV. O erro exato foi:</p>
+                <p>Ocorreu uma falha ao ler os dados do seu CSV.</p>
                 <code style={{ background: '#eee', padding: 10, display: 'block', borderRadius: 5 }}>{this.state.errorInfo.toString()}</code>
                 <button onClick={() => window.location.reload()} style={{ marginTop: 20, padding: '10px 20px', cursor: 'pointer' }}>Recarregar Aplicativo</button>
             </div>;
@@ -22,7 +22,7 @@ const globalCSS = `
 
   :root {
       --pink: #FF007F;
-      --cyan: #008B8B;
+      --cyan: #008B8B; /* Ciano Escuro / Legível */
       --gold: #C5A059;
       --black: #222222;
       --gray: #777777;
@@ -120,31 +120,35 @@ const globalCSS = `
   .m-line-h { position: absolute; height: 4px; background: var(--black); left: 0; right: 0; }
   .m-block { position: absolute; }
 
-  /* ------------- GRELHA DE ITENS ------------- */
-  .catalog-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      column-gap: 12mm;
-      row-gap: 7.5mm; /* Espaçamento ideal para 10 itens (5 linhas) */
-      height: 245mm;
-      align-content: start;
-      align-items: start;
+  /* ------------- GRELHA MASONRY (ASSIMÉTRICA PERFEITA) ------------- */
+  .masonry-layout {
+      display: flex;
+      gap: 10mm;
+      align-items: flex-start;
+      height: 245mm; /* Limite de segurança antes do rodapé */
+  }
+
+  .masonry-col {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 6mm; /* Respiro vertical entre os itens */
   }
 
   .catalog-item {
-      display: block; 
+      display: flow-root; /* Clearfix moderno para floats */
       padding: 10px 10px 10px 15px;
       border-left: 4px solid; 
       background: var(--white);
       border-radius: 0 6px 6px 0;
       box-sizing: border-box;
-      box-shadow: 2px 2px 10px rgba(0,0,0,0.03);
+      box-shadow: 2px 2px 10px rgba(0,0,0,0.05); /* Sombra mais visível */
   }
 
   .catalog-item.star-5 {
       border-left-width: 8px !important;
-      border: 1px solid rgba(0,0,0,0.05);
-      box-shadow: 0 10px 25px rgba(0,0,0,0.15); 
+      border: 1px solid rgba(0,0,0,0.08);
+      box-shadow: 0 12px 30px rgba(0,0,0,0.18); /* Sombra hiper-contrastante */
       border-radius: 4px 8px 8px 4px;
       padding-left: 12px;
   }
@@ -170,24 +174,24 @@ const globalCSS = `
   .star-gradient { width: 22px; height: 22px; filter: drop-shadow(0px 2px 3px rgba(0,0,0,0.2)); margin-bottom: 4px; }
 
   /* ------------- FICHA CATALOGRÁFICA ------------- */
-  .catalog-ficha { font-size: 0.65em; display: flex; flex-direction: column; gap: 3px; margin-top: 4px; }
+  .catalog-ficha { font-size: 0.65em; display: flex; flex-direction: column; gap: 3px; margin-top: 4px; clear: none; }
   .ficha-row { display: flex; flex-direction: row; gap: 4px; line-height: 1.3; }
   .ficha-label { font-weight: 600; color: var(--gray); text-transform: uppercase; white-space: nowrap; font-size: 0.9em;}
   .ficha-value { font-weight: 700; color: var(--black); word-break: break-word; }
 
-  /* ------------- ESTATÍSTICAS ------------- */
+  /* ------------- ESTATÍSTICAS (GRELHA 6 GRÁFICOS) ------------- */
   .stats-header-bar {
       display: flex; justify-content: space-between; background: var(--black); color: white;
-      padding: 15px 20px; border-radius: 8px; margin-bottom: 30px;
+      padding: 10px 20px; border-radius: 8px; margin-bottom: 20px;
   }
   .stat-block { text-align: center; width: 25%; }
-  .stat-num { font-size: 2.5em; font-weight: 800; color: var(--gold); line-height: 1; margin-bottom: 5px; font-family: 'VT323', monospace; text-shadow: 2px 2px 0 #000;}
-  .stat-lbl { font-size: 0.65em; text-transform: uppercase; letter-spacing: 1px; color: #ccc;}
+  .stat-num { font-size: 2em; font-weight: 800; color: var(--gold); line-height: 1; margin-bottom: 3px; font-family: 'VT323', monospace; text-shadow: 2px 2px 0 #000;}
+  .stat-lbl { font-size: 0.6em; text-transform: uppercase; letter-spacing: 1px; color: #ccc;}
 
-  .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; width: 100%; }
-  .chart-card { background: var(--white); border: 2px solid #eee; border-radius: 8px; padding: 15px; }
-  .chart-card h3 { font-size: 0.8em; text-transform: uppercase; color: var(--black); margin-top: 0; margin-bottom: 15px; text-align: center; font-weight: 800; }
-  .chart-container { height: 180px; width: 100%; }
+  .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; width: 100%; }
+  .chart-card { background: var(--white); border: 2px solid #eee; border-radius: 8px; padding: 10px; }
+  .chart-card h3 { font-size: 0.75em; text-transform: uppercase; color: var(--black); margin-top: 0; margin-bottom: 8px; text-align: center; font-weight: 800; }
+  .chart-container { height: 140px; width: 100%; }
 
   /* ------------- REGRAS DE IMPRESSÃO NATIVA ------------- */
   @media print {
@@ -242,7 +246,7 @@ const GradientStarIcon = () => (
     </svg>
 );
 
-// Funções Utilitárias Blindadas (String conversion garante ausência de falhas)
+// Funções Utilitárias Blindadas
 const safeString = (val) => (val === null || val === undefined) ? '' : String(val);
 
 const getCategoryInfo = (tipo) => {
@@ -259,6 +263,36 @@ const getSortKey = (item) => {
     const autor = safeString(item['Autor/Desenvolvedor']).trim();
     if (autor && autor.toLowerCase() !== 'various') return autor;
     return safeString(item['Título']).trim();
+};
+
+// Estimador de Altura do Item para o Motor Masonry
+const estimateItemHeight = (item) => {
+    let nota = parseFloat(safeString(item['Nota']).replace(',', '.'));
+    let h = 8; // Padding base + gap mínimo
+
+    let titleLen = safeString(item['Título']).length;
+    h += Math.ceil(titleLen / 25) * 5.5; // Altura do título
+
+    let autor = safeString(item['Autor/Desenvolvedor']).trim();
+    if (autor && autor.toLowerCase() !== 'various') h += 5.5;
+
+    h += 6; // Altura das Estrelas
+
+    let rows = 0;
+    if (item['Tipo']) rows++;
+    if (item['Ano']) rows++;
+    if (item['Editora/Gravadora'] || item['Produtora'] || item['Desenvolvedora']) rows++;
+    if (item['Status']) rows++;
+    if (item['Páginas/Tempo'] || item['Faixas'] || item['Minutos'] || item['Horas']) rows++;
+    h += rows * 4.5; // Altura da Ficha
+
+    // Se tiver capa, a altura mínima é o tamanho da capa
+    let hasCover = safeString(item['URL da Capa']).trim() !== '';
+    if (hasCover) h = Math.max(h, 28); 
+
+    if (nota === 5) h += 12; // Compensação de padding extra e estrela grande
+
+    return h + 6; // Adiciona o Gap (6mm) de respiro ao total
 };
 
 const StarRating = ({ notaStr }) => {
@@ -315,7 +349,7 @@ const CoverPage = ({ title, isMain, ownerName, dateStr, colorIndex }) => {
     );
 };
 
-// Item formatado para Grid Perfeito (Descrição permanentemente omitida)
+// Componente Cartão (Flutuação de Imagem Otimizada)
 const ItemCard = ({ item, accentColor }) => {
     let nota = parseFloat(safeString(item['Nota']).replace(',', '.'));
     if (isNaN(nota)) nota = 0;
@@ -329,7 +363,6 @@ const ItemCard = ({ item, accentColor }) => {
     const autor = safeString(item['Autor/Desenvolvedor']).trim();
 
     let stat = safeString(item['Status']);
-    // Regra especial para Discos e Filmes
     if (cat === 'DISCOS' || cat === 'VÍDEO') {
         stat = nota > 0 ? 'Concluído' : 'Não Iniciado';
     }
@@ -390,7 +423,9 @@ export default function App() {
     const chartTypeRef = useRef(null);
     const chartStatusRef = useRef(null);
     const chartRatingRef = useRef(null);
+    const chartDecadeRef = useRef(null); // Novo Gráfico Décadas
     const chartAuthorRef = useRef(null);
+    const chartPubRef = useRef(null); // Novo Gráfico Editoras
 
     const handleFileUpload = (e) => {
         const file = e.target.files[0];
@@ -400,7 +435,6 @@ export default function App() {
                 header: true,
                 skipEmptyLines: true,
                 complete: (results) => {
-                    // Filtrar linhas completamente vazias que podem quebrar o sistema
                     const validData = results.data.filter(row => safeString(row['Título']).trim() !== '' || safeString(row['Tipo']).trim() !== '');
                     setCsvData(validData);
                 }
@@ -408,14 +442,11 @@ export default function App() {
         }
     };
 
-    // Cálculos de Agregação ultra-seguros
     const aggregates = useMemo(() => {
         let p = 0, f = 0, m = 0, h = 0;
         csvData.forEach(item => {
             const catInfo = getCategoryInfo(item['Tipo']);
             const cat = catInfo ? catInfo.substring(2) : '';
-            
-            // Limpa qualquer texto, ponto ou vírgula antes de converter em inteiro
             const rawVal = safeString(item['Páginas/Tempo'] || item['Faixas'] || item['Minutos'] || item['Horas']);
             const val = parseInt(rawVal.replace(/\D/g, '') || '0', 10);
             
@@ -429,6 +460,7 @@ export default function App() {
         return { p, f, m, h };
     }, [csvData]);
 
+    // Motor de Paginação Dinâmica (Masonry)
     const pdfPages = useMemo(() => {
         if (!csvData.length) return [];
         
@@ -458,70 +490,96 @@ export default function App() {
                 return keyA.localeCompare(keyB, 'pt', { numeric: true, sensitivity: 'base' });
             });
 
-            let lastColorIdx = -1;
-            const authorColorMap = {};
-
             const cleanCatName = cat.substring(2);
             pages.push(<CoverPage key={`cover-${cat}`} title={cleanCatName} isMain={false} colorIndex={catIndex + 1} />);
             
-            // Layout perfeito de 10 Itens (5 linhas de 2 colunas)
-            const itemsPerPage = 10; 
-            for (let i = 0; i < grouped[cat].length; i += itemsPerPage) {
-                const chunk = grouped[cat].slice(i, i + itemsPerPage);
-                
-                const firstKey = getSortKey(chunk[0]);
-                const lastKey = getSortKey(chunk[chunk.length - 1]);
-                
-                const getDictLetter = (str) => {
-                    if (!str) return '?';
-                    const char = str.charAt(0).toUpperCase();
-                    if (/[0-9]/.test(char)) return '#';
-                    return char;
-                };
+            // --- Lógica Masonry (Duas Colunas Fluídas sem Estouro) ---
+            let allItemsToProcess = [...grouped[cat]];
+            let lastColorIdx = -1;
+            const authorColorMap = {};
+            const MAX_HEIGHT_MM = 240; // Margem de segurança máxima (não toca no rodapé)
 
-                const firstLetter = getDictLetter(firstKey);
-                const lastLetter = getDictLetter(lastKey);
-                const dictStr = firstLetter === lastLetter ? firstLetter : `${firstLetter} - ${lastLetter}`;
-                const currentPage = pageCounter;
+            while (allItemsToProcess.length > 0) {
+                let col1 = [], col2 = [];
+                let h1 = 0, h2 = 0;
 
-                pages.push(
-                    <div className="pdf-page" key={`page-${cat}-${currentPage}`}>
-                        <div className="page-header">
-                            <span className="vcr-font">{cleanCatName}</span>
-                            <span>{dictStr}</span>
-                        </div>
-                        
-                        <div className="catalog-grid">
-                            {chunk.map((item, idx) => {
-                                const authKey = getSortKey(item);
-                                if (authorColorMap[authKey] === undefined) {
-                                    // Lógica Anti-Colisão
-                                    let nextColor = (lastColorIdx + 1) % 3;
-                                    authorColorMap[authKey] = nextColor;
-                                    lastColorIdx = nextColor;
-                                }
-                                const itemColor = colorPalette[authorColorMap[authKey]];
+                while (allItemsToProcess.length > 0) {
+                    let item = allItemsToProcess[0]; // Espreitar o próximo
+                    let itemH = estimateItemHeight(item);
 
-                                return <ItemCard key={`item-${currentPage}-${idx}`} item={item} accentColor={itemColor} />
-                            })}
+                    // Se adicionar o item à coluna mais curta estourar a página, QUEBRA de Página!
+                    if (Math.min(h1, h2) + itemH > MAX_HEIGHT_MM) {
+                        break;
+                    }
+
+                    // Se couber, retira da lista e insere na coluna mais curta
+                    item = allItemsToProcess.shift();
+                    if (h1 <= h2) { col1.push(item); h1 += itemH; } 
+                    else { col2.push(item); h2 += itemH; }
+                }
+
+                if (col1.length > 0 || col2.length > 0) {
+                    const currentPage = pageCounter;
+                    
+                    // Lógica do Dicionário (Primeira e Última Letra da Página)
+                    let firstItem = col1[0] || col2[0];
+                    let lastItem = col2[col2.length-1] || col1[col1.length-1];
+                    const getDictLetter = (str) => {
+                        if (!str) return '?';
+                        const char = str.charAt(0).toUpperCase();
+                        return /[0-9]/.test(char) ? '#' : char;
+                    };
+                    const firstLetter = getDictLetter(getSortKey(firstItem));
+                    const lastLetter = getDictLetter(getSortKey(lastItem));
+                    const dictStr = firstLetter === lastLetter ? firstLetter : `${firstLetter} - ${lastLetter}`;
+
+                    // Renderiza a Página com as Duas Colunas Masonry
+                    pages.push(
+                        <div className="pdf-page" key={`page-${cat}-${currentPage}`}>
+                            <div className="page-header">
+                                <span className="vcr-font">{cleanCatName}</span>
+                                <span>{dictStr}</span>
+                            </div>
+                            
+                            <div className="masonry-layout">
+                                <div className="masonry-col">
+                                    {col1.map((item, idx) => {
+                                        const authKey = getSortKey(item);
+                                        if (authorColorMap[authKey] === undefined) {
+                                            let nextColor = (lastColorIdx + 1) % 3;
+                                            authorColorMap[authKey] = nextColor;
+                                            lastColorIdx = nextColor;
+                                        }
+                                        return <ItemCard key={`c1-${idx}`} item={item} accentColor={colorPalette[authorColorMap[authKey]]} />;
+                                    })}
+                                </div>
+                                <div className="masonry-col">
+                                    {col2.map((item, idx) => {
+                                        const authKey = getSortKey(item);
+                                        if (authorColorMap[authKey] === undefined) {
+                                            let nextColor = (lastColorIdx + 1) % 3;
+                                            authorColorMap[authKey] = nextColor;
+                                            lastColorIdx = nextColor;
+                                        }
+                                        return <ItemCard key={`c2-${idx}`} item={item} accentColor={colorPalette[authorColorMap[authKey]]} />;
+                                    })}
+                                </div>
+                            </div>
+                            
+                            <div className="page-footer"><span></span><span>{currentPage}</span></div>
                         </div>
-                        
-                        <div className="page-footer">
-                            <span></span>
-                            <span>{currentPage}</span>
-                        </div>
-                    </div>
-                );
-                pageCounter++;
+                    );
+                    pageCounter++;
+                }
             }
         });
 
-        // Dashboard de Estatísticas
+        // Dashboard de Estatísticas (6 Gráficos)
         pages.push(
             <div className="pdf-page" key="stats-page">
                 <div className="page-header"><span className="vcr-font">Estatísticas</span><span>Visão Geral</span></div>
                 
-                <h2 style={{ fontWeight: 300, fontSize: '2em', marginBottom: '20px', marginTop: '10px' }}>Visão Geral do Acervo</h2>
+                <h2 style={{ fontWeight: 300, fontSize: '2em', marginBottom: '15px', marginTop: '5px' }}>Visão Geral do Acervo</h2>
                 
                 <div className="stats-header-bar">
                     <div className="stat-block"><div className="stat-num">{aggregates.p}</div><div className="stat-lbl">Páginas Lidas</div></div>
@@ -531,22 +589,12 @@ export default function App() {
                 </div>
 
                 <div className="stats-grid">
-                    <div className="chart-card">
-                        <h3>Divisão por Suporte</h3>
-                        <div className="chart-container"><canvas ref={chartTypeRef}></canvas></div>
-                    </div>
-                    <div className="chart-card">
-                        <h3>Status de Consumo</h3>
-                        <div className="chart-container"><canvas ref={chartStatusRef}></canvas></div>
-                    </div>
-                    <div className="chart-card">
-                        <h3>Distribuição de Notas</h3>
-                        <div className="chart-container"><canvas ref={chartRatingRef}></canvas></div>
-                    </div>
-                    <div className="chart-card">
-                        <h3>Top 5 Editoras/Gravadoras</h3>
-                        <div className="chart-container"><canvas ref={chartAuthorRef}></canvas></div>
-                    </div>
+                    <div className="chart-card"><h3>Divisão por Suporte</h3><div className="chart-container"><canvas ref={chartTypeRef}></canvas></div></div>
+                    <div className="chart-card"><h3>Status de Consumo</h3><div className="chart-container"><canvas ref={chartStatusRef}></canvas></div></div>
+                    <div className="chart-card"><h3>Distribuição de Notas</h3><div className="chart-container"><canvas ref={chartRatingRef}></canvas></div></div>
+                    <div className="chart-card"><h3>Décadas de Lançamento</h3><div className="chart-container"><canvas ref={chartDecadeRef}></canvas></div></div>
+                    <div className="chart-card"><h3>Top 5 Autores/Desenv.</h3><div className="chart-container"><canvas ref={chartAuthorRef}></canvas></div></div>
+                    <div className="chart-card"><h3>Top 5 Editoras/Gravadoras</h3><div className="chart-container"><canvas ref={chartPubRef}></canvas></div></div>
                 </div>
 
                 <div className="page-footer"><span></span><span>{pageCounter}</span></div>
@@ -556,6 +604,7 @@ export default function App() {
         return pages;
     }, [csvData, ownerName, aggregates]);
 
+    // Motor de Renderização dos 6 Gráficos
     useEffect(() => {
         const instances = [];
 
@@ -565,9 +614,10 @@ export default function App() {
 
             const catCount = {};
             const statusCount = {};
-            // "Sem nota" removido, rastreia apenas as válidas
             const ratingCount = { 'Nota 5': 0, 'Nota 4': 0, 'Nota 3': 0, 'Nota 2': 0, 'Nota 1': 0 }; 
+            const authorCount = {};
             const pubCount = {};
+            const decadeCount = {};
 
             csvData.forEach(item => {
                 const catInfo = getCategoryInfo(item['Tipo']);
@@ -578,9 +628,7 @@ export default function App() {
                 if(isNaN(nota)) nota = 0;
 
                 let stat = safeString(item['Status']) || 'Não Definido';
-                if (cat === 'DISCOS' || cat === 'VÍDEO') {
-                    stat = nota > 0 ? 'Concluído' : 'Não Iniciado';
-                }
+                if (cat === 'DISCOS' || cat === 'VÍDEO') { stat = nota > 0 ? 'Concluído' : 'Não Iniciado'; }
                 statusCount[stat] = (statusCount[stat] || 0) + 1;
 
                 if (nota === 5) ratingCount['Nota 5']++;
@@ -589,49 +637,58 @@ export default function App() {
                 else if (nota >= 2) ratingCount['Nota 2']++;
                 else if (nota > 0) ratingCount['Nota 1']++;
 
+                const autor = safeString(item['Autor/Desenvolvedor']).trim();
+                if(autor && autor.toLowerCase() !== 'various') authorCount[autor] = (authorCount[autor] || 0) + 1;
+
                 const publisher = safeString(item['Editora/Gravadora'] || item['Produtora'] || item['Desenvolvedora']).trim();
-                if(publisher && publisher !== '') {
-                    pubCount[publisher] = (pubCount[publisher] || 0) + 1;
+                if(publisher) pubCount[publisher] = (pubCount[publisher] || 0) + 1;
+
+                const ano = parseInt(safeString(item['Ano']), 10);
+                if (!isNaN(ano) && ano > 1000) {
+                    const decada = Math.floor(ano / 10) * 10 + 's';
+                    decadeCount[decada] = (decadeCount[decada] || 0) + 1;
                 }
             });
 
+            const sortedAuthors = Object.entries(authorCount).sort((a, b) => b[1] - a[1]).slice(0, 5);
             const sortedPubs = Object.entries(pubCount).sort((a, b) => b[1] - a[1]).slice(0, 5);
+            const sortedDecades = Object.entries(decadeCount).sort((a, b) => a[0].localeCompare(b[0]));
+            
             const paletteStrict = ['#FF007F', '#008B8B', '#C5A059', '#FFFFFF', '#000000'];
 
             instances.push(new window.Chart(chartTypeRef.current, {
                 type: 'bar',
-                data: {
-                    labels: Object.keys(catCount),
-                    datasets: [{ label: 'Itens', data: Object.values(catCount), backgroundColor: paletteStrict, 
-                                 borderColor: '#000', borderWidth: [0,0,0,2,0], borderRadius: 4 }]
-                },
+                data: { labels: Object.keys(catCount), datasets: [{ data: Object.values(catCount), backgroundColor: paletteStrict, borderColor: '#000', borderWidth: [0,0,0,2,0], borderRadius: 4 }] },
                 options: { animation: false, responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
             }));
 
             instances.push(new window.Chart(chartStatusRef.current, {
                 type: 'doughnut',
-                data: {
-                    labels: Object.keys(statusCount),
-                    datasets: [{ data: Object.values(statusCount), backgroundColor: paletteStrict, borderColor: '#000', borderWidth: 1 }]
-                },
-                options: { animation: false, responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+                data: { labels: Object.keys(statusCount), datasets: [{ data: Object.values(statusCount), backgroundColor: paletteStrict, borderColor: '#000', borderWidth: 1 }] },
+                options: { animation: false, responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
             }));
 
             instances.push(new window.Chart(chartRatingRef.current, {
                 type: 'bar',
-                data: {
-                    labels: Object.keys(ratingCount),
-                    datasets: [{ label: 'Qtd', data: Object.values(ratingCount), backgroundColor: '#008B8B', borderRadius: 4 }]
-                },
+                data: { labels: Object.keys(ratingCount), datasets: [{ data: Object.values(ratingCount), backgroundColor: '#008B8B', borderRadius: 4 }] },
+                options: { animation: false, responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+            }));
+
+            instances.push(new window.Chart(chartDecadeRef.current, {
+                type: 'line',
+                data: { labels: sortedDecades.map(a => a[0]), datasets: [{ data: sortedDecades.map(a => a[1]), borderColor: '#C5A059', backgroundColor: 'rgba(197, 160, 89, 0.2)', fill: true, tension: 0.3 }] },
                 options: { animation: false, responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
             }));
 
             instances.push(new window.Chart(chartAuthorRef.current, {
                 type: 'bar',
-                data: {
-                    labels: sortedPubs.map(a => a[0].length > 15 ? a[0].substring(0, 15) + '...' : a[0]),
-                    datasets: [{ label: 'Qtd', data: sortedPubs.map(a => a[1]), backgroundColor: '#FF007F', borderRadius: 4 }]
-                },
+                data: { labels: sortedAuthors.map(a => a[0].length > 15 ? a[0].substring(0, 15) + '...' : a[0]), datasets: [{ data: sortedAuthors.map(a => a[1]), backgroundColor: '#FF007F', borderRadius: 4 }] },
+                options: { indexAxis: 'y', animation: false, responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+            }));
+
+            instances.push(new window.Chart(chartPubRef.current, {
+                type: 'bar',
+                data: { labels: sortedPubs.map(a => a[0].length > 15 ? a[0].substring(0, 15) + '...' : a[0]), datasets: [{ data: sortedPubs.map(a => a[1]), backgroundColor: '#222222', borderRadius: 4 }] },
                 options: { indexAxis: 'y', animation: false, responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
             }));
         }
@@ -655,11 +712,7 @@ export default function App() {
                     <input type="file" ref={fileInputRef} accept=".csv" style={{ display: 'none' }} onChange={handleFileUpload} />
                     
                     <div className="upload-area" onClick={() => fileInputRef.current?.click()}>
-                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#888" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                            <polyline points="17 8 12 3 7 8"></polyline>
-                            <line x1="12" y1="3" x2="12" y2="15"></line>
-                        </svg>
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#888" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
                         <h3 style={{ fontWeight: 400, color: '#333' }}>{fileName ? fileName : 'Selecione a sua folha de cálculo .csv'}</h3>
                     </div>
 
