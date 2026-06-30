@@ -1,14 +1,15 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 
+// CSS GLOBAL COM REGRAS DE IMPRESSÃO NATIVA E MASONRY LAYOUT
 const globalCSS = `
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&family=VT323&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
 
   :root {
       --pink: #FF007F;
-      --cyan: #008B8B; /* Ciano mais escuro para melhor legibilidade */
+      --cyan: #008B8B; /* Dark Cyan para melhor legibilidade no branco */
       --gold: #C5A059;
       --black: #222222;
-      --gray: #777777;
+      --gray: #666666;
       --light-gray: #F9F9F9;
       --white: #FFFFFF;
   }
@@ -25,41 +26,69 @@ const globalCSS = `
 
   /* ------------- INTERFACE DE USUÁRIO ------------- */
   .app-ui {
-      max-width: 600px; margin: 10vh auto; background: var(--white);
-      padding: 40px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      max-width: 600px;
+      margin: 10vh auto;
+      background: var(--white);
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
   }
-  .app-ui h1 { font-weight: 300; font-size: 2em; margin-top: 0; letter-spacing: -1px; }
+
+  .app-ui h1 { font-weight: 300; font-size: 2em; margin-top: 0; color: var(--black); letter-spacing: -1px; }
   .app-ui p { color: var(--gray); line-height: 1.6; }
 
   .upload-area {
-      border: 1px dashed #ccc; border-radius: 8px; padding: 40px; text-align: center;
-      cursor: pointer; margin: 30px 0; background: var(--light-gray); transition: 0.2s;
+      border: 2px dashed #ccc;
+      border-radius: 8px;
+      padding: 40px;
+      text-align: center;
+      cursor: pointer;
+      margin: 30px 0;
+      background: var(--light-gray);
+      transition: 0.2s;
   }
+  
   .upload-area:hover { border-color: var(--cyan); background: #f0ffff; }
 
   button.primary-btn {
       background: var(--black); color: var(--white); border: none; border-radius: 6px;
-      padding: 16px 30px; font-size: 1em; cursor: pointer; font-weight: 500; width: 100%; transition: 0.2s;
+      padding: 16px 30px; font-size: 1.1em; cursor: pointer; font-weight: bold; width: 100%; transition: 0.2s; text-transform: uppercase;
   }
   button.primary-btn:hover:not(:disabled) { background: var(--pink); }
   button.primary-btn:disabled { background: #d0d0d0; cursor: not-allowed; }
 
-  /* ------------- VISUALIZADOR ------------- */
-  .preview-wrapper { padding: 40px 0; display: flex; flex-direction: column; align-items: center; gap: 30px; }
-  
-  .floating-bar {
-      position: fixed; top: 20px; right: 20px; background: rgba(0,0,0,0.8);
-      padding: 15px 25px; border-radius: 50px; z-index: 1000;
-      display: flex; gap: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+  /* ------------- VISUALIZADOR DE PDF ------------- */
+  .preview-wrapper {
+      padding: 40px 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 30px;
   }
-  .floating-bar button { background: white; color: black; border: none; padding: 10px 20px; border-radius: 20px; font-weight: bold; cursor: pointer; }
+
+  .floating-bar {
+      position: fixed; top: 20px; right: 20px; background: rgba(0,0,0,0.85);
+      padding: 15px 25px; border-radius: 50px; z-index: 1000;
+      display: flex; gap: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+  }
+  
+  .floating-bar button {
+      background: white; color: black; border: none; padding: 10px 20px;
+      border-radius: 20px; font-weight: bold; cursor: pointer; text-transform: uppercase; font-size: 0.8em;
+  }
   .floating-bar button.print-btn { background: var(--cyan); color: white;}
 
   /* ------------- PÁGINA A4 ------------- */
   .pdf-page {
-      width: 210mm; height: 297mm; background: var(--white); position: relative;
-      padding: 20mm 15mm 20mm 15mm; box-sizing: border-box; overflow: hidden;
-      page-break-after: always; box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+      width: 210mm;
+      height: 297mm;
+      background: var(--white);
+      position: relative;
+      padding: 20mm 15mm 20mm 15mm;
+      box-sizing: border-box;
+      overflow: hidden;
+      page-break-after: always;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.15);
   }
 
   .page-header {
@@ -70,131 +99,189 @@ const globalCSS = `
 
   .page-footer {
       position: absolute; bottom: 12mm; left: 15mm; right: 15mm;
-      display: flex; justify-content: space-between; font-size: 0.7em; color: var(--gray);
+      display: flex; justify-content: flex-end; font-size: 0.7em; color: var(--gray);
       border-top: 1px solid #eee; padding-top: 5px;
   }
 
-  /* ------------- CAPAS E FONTES RETRÔ ------------- */
-  .vcr-font {
-      font-family: 'VT323', monospace;
-  }
+  /* ------------- CAPAS E FONTES VCR ------------- */
+  .vcr-font { font-family: 'VT323', monospace; }
   
   .cover-page { 
       display: flex; flex-direction: column; justify-content: center; 
       height: 100%; padding-left: 15mm; position: relative; z-index: 10;
   }
   
-  .cover-subtitle { font-size: 2em; font-weight: 300; margin: 0 0 10px 0; color: var(--gray); text-transform: uppercase; letter-spacing: -0.5px;}
+  .cover-title { font-size: 1.6em; font-weight: 400; margin: 0 0 5px 0; color: var(--gray); letter-spacing: 1px;}
   
-  /* Titulos das categorias com stroke (negrito forçado) */
-  .category-title { 
-      font-size: 6em; margin: 0; line-height: 1; letter-spacing: 2px; text-transform: uppercase;
-      -webkit-text-stroke: 3px currentColor; /* Deixa a fonte VCR bem grossa */
-  }
-
-  /* Nome do dono com degradê furtacor */
   .cover-owner { 
-      font-size: 8em; margin: 0; line-height: 0.9;
+      font-size: 8em; 
+      margin: 0; 
+      line-height: 0.9;
+      text-transform: uppercase;
       background: linear-gradient(135deg, var(--pink) 0%, var(--cyan) 50%, var(--gold) 100%);
       -webkit-background-clip: text;
-      color: transparent;
+      -webkit-text-fill-color: transparent;
       -webkit-text-stroke: 2px var(--black);
-      filter: drop-shadow(4px 4px 0px rgba(0,0,0,0.1));
+      filter: drop-shadow(4px 4px 0px rgba(0,0,0,0.15));
   }
+
+  .cover-cat-title {
+      font-size: 6.5em; 
+      margin: 0; 
+      line-height: 0.9;
+      text-transform: uppercase;
+      -webkit-text-stroke: 2px var(--black);
+      color: currentColor; /* Inherits the random color set inline */
+  }
+
+  .cover-meta { font-size: 0.9em; color: var(--gray); margin-top: 30px; }
 
   .mondrian-decor { position: absolute; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; z-index: 1; }
   .m-line-v { position: absolute; width: 4px; background: var(--black); top: 0; bottom: 0; }
   .m-line-h { position: absolute; height: 4px; background: var(--black); left: 0; right: 0; }
   .m-block { position: absolute; }
 
-  /* ------------- GRID DE ITENS ------------- */
+  /* ------------- GRID DE ITENS (MASONRY COLUMNS) ------------- */
   .catalog-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
+      column-count: 2;
       column-gap: 15mm;
-      row-gap: 8mm; /* Espaço reduzido entre caixas */
       height: 245mm;
-      align-content: start;
-      align-items: start; /* Para as caixas não esticarem */
   }
 
   .catalog-item {
-      display: block; /* Essencial para o float funcionar */
-      padding: 12px 10px 12px 15px;
-      border-left: 4px solid; /* Cor definida inline */
+      break-inside: avoid;
+      page-break-inside: avoid;
+      margin-bottom: 12mm;
+      display: inline-block;
+      width: 100%;
+      position: relative;
       background: var(--white);
+      padding: 12px 10px 12px 15px;
+      border-left: 4px solid; /* Dinâmico */
       border-radius: 0 6px 6px 0;
+      box-shadow: 2px 2px 10px rgba(0,0,0,0.04);
       box-sizing: border-box;
-      box-shadow: 2px 2px 10px rgba(0,0,0,0.03);
   }
 
   .catalog-item.star-5 {
       border-left-width: 8px !important;
-      border: 1px solid rgba(0,0,0,0.05);
-      border-left: 8px solid;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.15); /* Contraste forte da sombra */
-      border-radius: 4px 8px 8px 4px;
-      padding-left: 12px;
+      border: 1px solid #eee;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+      border-radius: 6px 8px 8px 6px;
+      background: linear-gradient(135deg, rgba(255,0,127,0.02) 0%, rgba(0,139,139,0.02) 50%, rgba(197,160,89,0.05) 100%);
   }
 
+  /* ------------- TEXTOS DO ITEM ------------- */
   .item-code {
-      float: right;
-      font-size: 0.6em;
+      position: absolute;
+      top: -6px;
+      right: 5px;
+      font-size: 0.5em;
       color: var(--black);
       font-weight: 800;
       font-family: monospace;
-      margin-left: 10px;
+      letter-spacing: 0.5px;
+      background: white;
+      padding: 2px 4px;
+      border-radius: 3px;
+      border: 1px solid #eee;
   }
 
+  .item-title { font-size: 1.15em; font-weight: 800; color: var(--black); line-height: 1.1; margin-bottom: 4px; padding-right: 20px;}
+  .item-author { font-size: 0.9em; font-weight: 700; margin-bottom: 6px; line-height: 1.1; }
+
+  /* Estrelas */
+  .stars-container { margin-bottom: 10px; display: flex; gap: 2px; }
+  .star { width: 14px; height: 14px; }
+  .star-gradient { width: 24px; height: 24px; filter: drop-shadow(0px 2px 3px rgba(0,0,0,0.2)); margin-bottom: 4px; }
+
+  /* ------------- FLOAT DE IMAGEM ------------- */
   .item-cover-box {
       float: left;
-      width: 75px;
-      height: 105px;
-      margin-right: 12px;
-      margin-bottom: 6px;
+      width: 90px;
+      height: 125px;
       background: #f4f4f4;
       border: 1px solid #e0e0e0;
       border-radius: 4px;
       overflow: hidden;
-      display: flex; align-items: center; justify-content: center;
-      box-shadow: 2px 2px 8px rgba(0,0,0,0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 2px 2px 8px rgba(0,0,0,0.08);
+      margin-right: 15px;
+      margin-bottom: 10px;
   }
 
-  .item-cover-box img { width: 100%; height: 100%; object-fit: cover; }
-
-  /* Tipografia do Item */
-  .item-title { font-size: 1.1em; font-weight: 800; color: var(--black); line-height: 1.1; margin-bottom: 4px; }
-  .item-author { font-size: 0.95em; font-weight: 700; line-height: 1.2; margin-bottom: 6px; }
-  
-  .stars-container { margin-bottom: 6px; display: flex; gap: 2px; }
-  .star { width: 13px; height: 13px; }
-  .star-gradient { width: 24px; height: 24px; filter: drop-shadow(0px 2px 3px rgba(0,0,0,0.2)); margin-bottom: 4px; }
+  .item-cover-box img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+  }
 
   /* ------------- FICHA CATALOGRÁFICA ------------- */
   .catalog-ficha {
       font-size: 0.7em;
       display: flex;
       flex-direction: column;
-      gap: 3px;
-      margin-top: 4px;
+      gap: 4px;
+      clear: none;
   }
 
-  .ficha-row { display: flex; flex-direction: row; gap: 4px; line-height: 1.3; }
-  .ficha-label { font-weight: 600; color: var(--gray); text-transform: uppercase; white-space: nowrap; font-size: 0.9em;}
-  .ficha-value { font-weight: 700; color: var(--black); word-break: break-word; }
+  .ficha-row {
+      display: flex;
+      flex-direction: row;
+      gap: 6px;
+      line-height: 1.3;
+      align-items: baseline;
+  }
 
-  /* ------------- ESTATÍSTICAS ------------- */
+  .ficha-label { font-weight: 700; color: #999; text-transform: uppercase; font-size: 0.85em; white-space: nowrap; }
+  .ficha-value { font-weight: 600; color: var(--black); }
+
+  .item-desc {
+      margin-top: 10px; font-size: 0.75em; font-style: italic; color: var(--gray);
+      display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden;
+  }
+
+  /* ------------- DASHBOARD ESTATÍSTICAS ------------- */
   .stats-header-bar {
-      display: flex; justify-content: space-between; background: var(--black); color: white;
-      padding: 15px 20px; border-radius: 8px; margin-bottom: 30px;
+      display: flex;
+      justify-content: space-between;
+      background: var(--black);
+      color: white;
+      padding: 15px 20px;
+      border-radius: 8px;
+      margin-bottom: 20px;
   }
-  .stat-block { text-align: center; }
-  .stat-num { font-size: 1.8em; font-weight: 800; color: var(--gold); line-height: 1; margin-bottom: 5px; font-family: 'VT323', monospace;}
-  .stat-lbl { font-size: 0.6em; text-transform: uppercase; letter-spacing: 1px; color: #ccc;}
+  .stat-box { text-align: center; }
+  .stat-val { font-size: 1.5em; font-weight: 800; font-family: 'VT323', monospace; color: var(--gold); }
+  .stat-lbl { font-size: 0.6em; text-transform: uppercase; letter-spacing: 1px; }
 
-  .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; width: 100%; }
-  .chart-card { background: var(--white); border: 2px solid #eee; border-radius: 8px; padding: 15px; }
-  .chart-card h3 { font-size: 0.8em; text-transform: uppercase; color: var(--black); margin-top: 0; margin-bottom: 15px; text-align: center; font-weight: 800; }
+  .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      width: 100%;
+  }
+
+  .chart-card {
+      background: var(--white);
+      border: 2px solid var(--black);
+      border-radius: 8px;
+      padding: 15px;
+      box-shadow: 4px 4px 0 var(--cyan);
+  }
+
+  .chart-card h3 {
+      font-size: 0.8em;
+      text-transform: uppercase;
+      color: var(--black);
+      margin-top: 0;
+      margin-bottom: 15px;
+      text-align: center;
+      font-weight: 800;
+  }
+
   .chart-container { height: 180px; width: 100%; }
 
   /* ------------- REGRAS DE IMPRESSÃO NATIVA ------------- */
@@ -206,7 +293,7 @@ const globalCSS = `
   }
 `;
 
-// Hook para carregar as bibliotecas (PapaParse e ChartJS)
+// Hook: Bibliotecas Externas
 const useExternalScripts = () => {
     const [loaded, setLoaded] = useState(false);
     useEffect(() => {
@@ -222,9 +309,9 @@ const useExternalScripts = () => {
     return loaded;
 };
 
-// Ícones Customizados
+// Ícones SVGs
 const StarIcon = ({ filled, color }) => (
-    <svg className="star" viewBox="0 0 24 24" fill={filled ? color : "none"} stroke={filled ? color : "#aaa"} strokeWidth="2">
+    <svg className="star" viewBox="0 0 24 24" fill={filled ? color : "none"} stroke={filled ? color : "#ccc"} strokeWidth="2">
         <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
     </svg>
 );
@@ -249,6 +336,7 @@ const GradientStarIcon = () => (
     </svg>
 );
 
+// Helpers
 const getCategoryInfo = (tipo) => {
     const t = (tipo || '').toLowerCase().trim();
     if (['livro', 'quadrinho', 'revista', 'hq', 'mangá', 'hqs'].includes(t)) return '1 LIVROS';
@@ -264,55 +352,67 @@ const getSortKey = (item) => {
     return (item['Título'] || '').trim();
 };
 
-// Lógica de Cores Temáticas para as Estrelas
-const StarRating = ({ nota }) => {
-    let n = parseFloat((nota || '0').replace(',', '.'));
-    if (isNaN(n)) n = 0;
+const getDictLetter = (str) => {
+    if (!str) return '?';
+    const char = str.charAt(0).toUpperCase();
+    if (/[0-9]/.test(char)) return '#';
+    return char;
+};
 
-    if (n === 5) return <div className="stars-container"><GradientStarIcon /></div>;
+// Gera um Hash numérico baseado em String para manter consistência de cor no mesmo Autor
+const hashString = (str) => {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+        hash = str.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    return Math.abs(hash);
+};
+
+const StarRating = ({ nota }) => {
+    if (nota === 5) return <div className="stars-container"><GradientStarIcon /></div>;
     
-    let color = '#ccc'; // Vazias
-    if (n > 0 && n <= 2) color = 'var(--gold)';
-    else if (n > 2 && n <= 3) color = 'var(--cyan)';
-    else if (n > 3 && n < 5) color = 'var(--pink)';
+    let color = '#ccc'; // Estrela vazia (nota 0) tem contorno cinza via CSS
+    if (nota >= 1 && nota < 3) color = 'var(--gold)';
+    if (nota >= 3 && nota < 4) color = 'var(--cyan)';
+    if (nota >= 4 && nota < 5) color = 'var(--pink)';
 
     const stars = [];
     for (let i = 1; i <= 5; i++) {
-        if (n >= i) stars.push(<StarIcon key={i} filled={true} color={color} />);
-        else if (n >= i - 0.5) stars.push(<HalfStarIcon key={i} color={color} />);
+        if (nota >= i) stars.push(<StarIcon key={i} filled={true} color={color} />);
+        else if (nota >= i - 0.5) stars.push(<HalfStarIcon key={i} color={color} />);
         else stars.push(<StarIcon key={i} filled={false} color={color} />);
     }
     return <div className="stars-container">{stars}</div>;
 };
 
-// Componente da Capa
+// Componente Capa
 const CoverPage = ({ title, isMain, ownerName, dateStr, colorIndex }) => {
-    const palette = ['var(--pink)', 'var(--cyan)', 'var(--gold)', 'var(--black)'];
-    const accent = palette[colorIndex % 3];
+    const colors = ['var(--cyan)', 'var(--pink)', 'var(--gold)'];
+    const accent = colors[colorIndex % 3] || 'var(--black)';
 
     return (
         <div className="pdf-page">
             <div className="mondrian-decor">
-                <div className="m-line-v" style={{ left: '20mm', backgroundColor: '#e5e5e5' }}></div>
-                <div className="m-line-h" style={{ bottom: '40mm', backgroundColor: '#e5e5e5' }}></div>
-                <div className="m-block" style={{ top: '0', right: '30mm', width: '20mm', height: '10mm', backgroundColor: 'var(--cyan)' }}></div>
-                <div className="m-block" style={{ bottom: '15mm', left: '15mm', width: '5mm', height: '25mm', backgroundColor: 'var(--pink)' }}></div>
-                <div className="m-block" style={{ top: '60mm', right: '0', width: '8mm', height: '40mm', backgroundColor: 'var(--gold)' }}></div>
+                <div className="m-line-v" style={{ left: '25mm', backgroundColor: '#eaeaea' }}></div>
+                <div className="m-line-h" style={{ bottom: '50mm', backgroundColor: '#eaeaea' }}></div>
+                <div className="m-block" style={{ top: '0', right: '40mm', width: '30mm', height: '15mm', backgroundColor: 'var(--cyan)' }}></div>
+                <div className="m-block" style={{ bottom: '25mm', left: '20mm', width: '10mm', height: '35mm', backgroundColor: 'var(--pink)' }}></div>
+                <div className="m-block" style={{ top: '80mm', right: '0', width: '12mm', height: '60mm', backgroundColor: 'var(--gold)' }}></div>
             </div>
 
             <div className="cover-page">
                 {isMain ? (
                     <>
-                        <h2 className="cover-subtitle">Coleção em Suporte Físico - Memorabilia</h2>
+                        <h2 className="cover-title">Coleção em Suporte Físico - Memorabilia</h2>
                         <h1 className="cover-owner vcr-font">{ownerName || 'Acervo'}</h1>
                         <div className="cover-meta">
-                            <div style={{ fontSize: '0.85em', marginTop: '15px' }}>Gerado em {dateStr}</div>
+                            <div>Gerado em {dateStr}</div>
                         </div>
                     </>
                 ) : (
                     <>
-                        <h2 className="cover-subtitle">Categoria</h2>
-                        <h1 className="category-title vcr-font" style={{ color: accent }}>{title}</h1>
+                        <h2 className="cover-title" style={{ letterSpacing: '2px', textTransform: 'uppercase' }}>Categoria</h2>
+                        <h1 className="cover-cat-title vcr-font" style={{ color: accent }}>{title}</h1>
                     </>
                 )}
             </div>
@@ -320,75 +420,78 @@ const CoverPage = ({ title, isMain, ownerName, dateStr, colorIndex }) => {
     );
 };
 
-// COMPONENTE DO ITEM COM FLOAT E FICHA INTELIGENTE
-const ItemCard = ({ item, accentColor }) => {
+// COMPONENTE DO ITEM (MASONRY & FLOAT)
+const ItemCard = ({ item, cat }) => {
     let nota = parseFloat((item['Nota'] || '0').replace(',', '.'));
     if (isNaN(nota)) nota = 0;
-    
     let isStar5 = nota === 5;
-    const cat = getCategoryInfo(item['Tipo']).substring(2);
+    
+    // Cor Baseada no Autor/Coleção
+    const authorKey = getSortKey(item);
+    const colors = ['var(--pink)', 'var(--cyan)', 'var(--gold)'];
+    const colorIndex = hashString(authorKey) % 3;
+    const authorColor = colors[colorIndex];
 
-    const publisher = item['Editora/Gravadora'] || item['Produtora'] || item['Desenvolvedora'];
-    const timeVal = item['Páginas/Tempo'] || item['Faixas'] || item['Minutos'] || item['Horas'];
-    const autor = (item['Autor/Desenvolvedor'] || '').trim();
+    const isLivro = cat === '1 LIVROS';
+    const isDisco = cat === '2 DISCOS';
+    const isVideo = cat === '3 VÍDEO';
+    const isGame = cat === '4 GAMES';
 
-    // Lógica inteligente de status e labels
-    let stat = item['Status'];
-    if (cat === 'DISCOS' || cat === 'VÍDEO') {
-        stat = nota > 0 ? 'Concluído' : 'Não Iniciado';
+    // Inteligência da Ficha
+    let publisherLabel = ''; let publisherValue = '';
+    let amountLabel = ''; let amountValue = '';
+
+    if (isLivro) { publisherLabel = 'Editora'; publisherValue = item['Editora/Gravadora']; amountLabel = 'Páginas'; amountValue = item['Páginas/Tempo']; }
+    else if (isDisco) { publisherLabel = 'Gravadora'; publisherValue = item['Editora/Gravadora']; amountLabel = 'Faixas'; amountValue = item['Páginas/Tempo']; }
+    else if (isVideo) { publisherLabel = 'Produtora'; publisherValue = item['Editora/Gravadora']; amountLabel = 'Minutos'; amountValue = item['Páginas/Tempo']; }
+    else if (isGame) { publisherLabel = 'Desenvolvedora'; publisherValue = item['Autor/Desenvolvedor']; amountLabel = 'Horas'; amountValue = item['Páginas/Tempo']; }
+
+    // Status Inteligente
+    let finalStatus = item['Status'] || 'Não Definido';
+    if (isDisco || isVideo) {
+        finalStatus = nota > 0 ? 'Concluído' : 'Não Iniciado';
     }
 
-    let pLabel = 'EDITORA/GRAVADORA';
-    let tLabel = 'PÁGINAS/TEMPO';
-    let isDisco = false;
-    let isVideo = false;
-
-    if(cat === 'LIVROS') { pLabel = 'Editora'; tLabel = 'Páginas'; }
-    if(cat === 'DISCOS') { pLabel = 'Gravadora'; tLabel = 'Faixas'; isDisco = true; }
-    if(cat === 'GAMES') { pLabel = 'Desenv.'; tLabel = 'Horas'; }
-    if(cat === 'VÍDEO') { pLabel = 'Produtora'; tLabel = 'Minutos'; isVideo = true; }
-
     return (
-        <div className={`catalog-item ${isStar5 ? 'star-5' : ''}`} style={{ borderLeftColor: accentColor }}>
+        <div className={`catalog-item ${isStar5 ? 'star-5' : ''}`} style={{ borderLeftColor: authorColor }}>
             
+            {item['Código Arquivístico'] && (
+                <div className="item-code">{item['Código Arquivístico']}</div>
+            )}
+
+            {/* Imagem Flutuante */}
             {item['URL da Capa'] && item['URL da Capa'].trim() !== '' && (
                 <div className="item-cover-box">
                     <img src={item['URL da Capa']} alt="Capa" crossOrigin="anonymous" onError={(e) => { e.target.style.display = 'none'; e.target.parentNode.style.display = 'none'; }} />
                 </div>
             )}
 
-            {/* Código Arquivístico flutuando a direita (Neutro e Negrito) */}
-            {item['Código Arquivístico'] && (
-                <div className="item-code">{item['Código Arquivístico']}</div>
-            )}
-
+            {/* Texto que abraça a imagem */}
             <div className="item-title">{item['Título'] || 'Sem Título'}</div>
             
-            {/* O Autor ganha a cor de destaque (Ciano, Pink ou Dourado) */}
-            {autor && autor.toLowerCase() !== 'various' && cat !== 'GAMES' && (
-                <div className="item-author" style={{ color: accentColor }}>{autor}</div>
+            {/* O Autor herda a cor da borda, mas o Título e o Codigo ficam pretos */}
+            {item['Autor/Desenvolvedor'] && item['Autor/Desenvolvedor'].toLowerCase() !== 'various' && !isGame && (
+                <div className="item-author" style={{ color: authorColor }}>{item['Autor/Desenvolvedor']}</div>
             )}
-            
+
             <StarRating nota={nota} />
 
             <div className="catalog-ficha">
-                {item['Tipo'] && (
-                    <div className="ficha-row"><span className="ficha-label">Tipo:</span><span className="ficha-value">{item['Tipo']}</span></div>
-                )}
                 {item['Ano'] && (
                     <div className="ficha-row"><span className="ficha-label">Ano:</span><span className="ficha-value">{item['Ano']}</span></div>
                 )}
-                {publisher && (
-                    <div className="ficha-row"><span className="ficha-label">{pLabel}:</span><span className="ficha-value">{publisher}</span></div>
+                {publisherValue && (
+                    <div className="ficha-row"><span className="ficha-label">{publisherLabel}:</span><span className="ficha-value">{publisherValue}</span></div>
                 )}
-                {/* Oculta status em discos. Em Vídeo, se for automático, exibimos? O usuário disse 'oculte os status em discos'. Vamos manter oculto para discos. */}
-                {!isDisco && stat && (
-                    <div className="ficha-row"><span className="ficha-label">Status:</span><span className="ficha-value">{stat}</span></div>
+                {!isDisco && !isVideo && finalStatus && (
+                    <div className="ficha-row"><span className="ficha-label">Status:</span><span className="ficha-value">{finalStatus}</span></div>
                 )}
-                {timeVal && (
-                    <div className="ficha-row"><span className="ficha-label">{tLabel}:</span><span className="ficha-value">{timeVal}</span></div>
+                {amountValue && (
+                    <div className="ficha-row"><span className="ficha-label">{amountLabel}:</span><span className="ficha-value">{amountValue}</span></div>
                 )}
             </div>
+
+            {item['Descrição'] && <div className="item-desc">"{item['Descrição']}"</div>}
         </div>
     );
 };
@@ -401,12 +504,10 @@ export default function App() {
     const [viewMode, setViewMode] = useState('upload'); 
     
     const fileInputRef = useRef(null);
-    
-    // Referências dos 4 gráficos
     const chartTypeRef = useRef(null);
-    const chartStatusRef = useRef(null);
     const chartRatingRef = useRef(null);
-    const chartAuthorRef = useRef(null);
+    const chartStatusRef = useRef(null);
+    const chartPubRef = useRef(null);
 
     const handleFileUpload = (e) => {
         const file = e.target.files[0];
@@ -435,40 +536,38 @@ export default function App() {
         });
         
         const sortedCategories = Object.keys(grouped).sort();
-        const colorPalette = ['var(--pink)', 'var(--cyan)', 'var(--gold)'];
 
-        pages.push(<CoverPage key="main-cover" isMain={true} ownerName={ownerName} dateStr={dateStr} colorIndex={0} />);
+        // 1. Capa Master
+        pages.push(<CoverPage key="main-cover" isMain={true} ownerName={ownerName} dateStr={dateStr} />);
 
+        // 2. Iterando Categorias
         sortedCategories.forEach((cat, catIndex) => {
             
+            // Ordenação Primária: Autor > Edição/Ano
             grouped[cat].sort((a, b) => {
                 const keyA = getSortKey(a);
                 const keyB = getSortKey(b);
-                return keyA.localeCompare(keyB, 'pt', { numeric: true, sensitivity: 'base' });
+                const cmp = keyA.localeCompare(keyB, 'pt', { numeric: true, sensitivity: 'base' });
+                if (cmp !== 0) return cmp;
+                
+                const anoA = parseInt(a['Ano']) || 0;
+                const anoB = parseInt(b['Ano']) || 0;
+                if (anoA !== anoB) return anoA - anoB;
+                
+                return (a['Título'] || '').localeCompare(b['Título'] || '', 'pt', {numeric: true});
             });
-
-            // Lógica Anti-Colisão de Cores
-            let lastColorIdx = -1;
-            const authorColorMap = {};
-
-            const cleanCatName = cat.substring(2);
-            pages.push(<CoverPage key={`cover-${cat}`} title={cleanCatName} isMain={false} colorIndex={catIndex + 1} />);
             
-            // Alterado para 10 itens por página (5 linhas, 2 colunas) - Otimização de espaço
-            const itemsPerPage = 10; 
+            const cleanCatName = cat.substring(2);
+            pages.push(<CoverPage key={`cover-${cat}`} title={cleanCatName} isMain={false} colorIndex={catIndex} />);
+            
+            // Chunks de 8 para preencher perfeitamente a página sem vazamentos
+            const itemsPerPage = 8; 
             for (let i = 0; i < grouped[cat].length; i += itemsPerPage) {
                 const chunk = grouped[cat].slice(i, i + itemsPerPage);
                 
                 const firstKey = getSortKey(chunk[0]);
                 const lastKey = getSortKey(chunk[chunk.length - 1]);
                 
-                const getDictLetter = (str) => {
-                    if (!str) return '?';
-                    const char = str.charAt(0).toUpperCase();
-                    if (/[0-9]/.test(char)) return '#';
-                    return char;
-                };
-
                 const firstLetter = getDictLetter(firstKey);
                 const lastLetter = getDictLetter(lastKey);
                 const dictStr = firstLetter === lastLetter ? firstLetter : `${firstLetter} - ${lastLetter}`;
@@ -477,27 +576,18 @@ export default function App() {
                 pages.push(
                     <div className="pdf-page" key={`page-${cat}-${currentPage}`}>
                         <div className="page-header">
-                            <span className="vcr-font">{cleanCatName}</span>
+                            <span>{cleanCatName}</span>
                             <span>{dictStr}</span>
                         </div>
                         
+                        {/* Container CSS Column Count (Masonry) */}
                         <div className="catalog-grid">
-                            {chunk.map((item, idx) => {
-                                const authKey = getSortKey(item);
-                                if (authorColorMap[authKey] === undefined) {
-                                    // Sorteia a próxima cor garantindo que não seja igual a última usada
-                                    let nextColor = (lastColorIdx + 1) % 3;
-                                    authorColorMap[authKey] = nextColor;
-                                    lastColorIdx = nextColor;
-                                }
-                                const itemColor = colorPalette[authorColorMap[authKey]];
-
-                                return <ItemCard key={`item-${currentPage}-${idx}`} item={item} accentColor={itemColor} />
-                            })}
+                            {chunk.map((item, idx) => (
+                                <ItemCard key={`item-${currentPage}-${idx}`} item={item} cat={cat} />
+                            ))}
                         </div>
                         
                         <div className="page-footer">
-                            <span></span>
                             <span>{currentPage}</span>
                         </div>
                     </div>
@@ -506,28 +596,38 @@ export default function App() {
             }
         });
 
-        // 3. Página de Estatísticas 
+        // Contadores Estatísticos Totais
+        let sumPages = 0; let sumTracks = 0; let sumMins = 0; let sumHours = 0;
+        csvData.forEach(item => {
+            const cat = getCategoryInfo(item['Tipo']);
+            const amount = parseInt(item['Páginas/Tempo']) || 0;
+            if (cat === '1 LIVROS') sumPages += amount;
+            if (cat === '2 DISCOS') sumTracks += amount;
+            if (cat === '3 VÍDEO') sumMins += amount;
+            if (cat === '4 GAMES') sumHours += amount;
+        });
+
+        // 3. Página de Estatísticas
         pages.push(
             <div className="pdf-page" key="stats-page">
-                <div className="page-header"><span className="vcr-font">Estatísticas</span><span>Visão Geral</span></div>
+                <div className="page-header"><span>Estatísticas</span><span>Visão Geral</span></div>
                 
-                <h2 style={{ fontWeight: 300, fontSize: '2em', marginBottom: '20px', marginTop: '10px' }}>Visão Geral do Acervo</h2>
+                <h2 style={{ fontWeight: 300, fontSize: '2.5em', marginBottom: '20px', marginTop: '0', color: 'var(--black)' }}>Acervo em Números</h2>
                 
-                {/* Placar de Agregados */}
                 <div className="stats-header-bar">
-                    <div className="stat-block"><div className="stat-num" id="tot-paginas">0</div><div className="stat-lbl">Páginas Lidas</div></div>
-                    <div className="stat-block"><div className="stat-num" id="tot-faixas">0</div><div className="stat-lbl">Faixas Ouvidas</div></div>
-                    <div className="stat-block"><div className="stat-num" id="tot-minutos">0</div><div className="stat-lbl">Min. Assistidos</div></div>
-                    <div className="stat-block"><div className="stat-num" id="tot-horas">0</div><div className="stat-lbl">Horas Jogadas</div></div>
+                    <div className="stat-box"><div className="stat-val">{sumPages}</div><div className="stat-lbl">Páginas Lidas</div></div>
+                    <div className="stat-box"><div className="stat-val">{sumTracks}</div><div className="stat-lbl">Faixas Musicais</div></div>
+                    <div className="stat-box"><div className="stat-val">{sumMins}</div><div className="stat-lbl">Minutos de Filme</div></div>
+                    <div className="stat-box"><div className="stat-val">{sumHours}</div><div className="stat-lbl">Horas de Jogo</div></div>
                 </div>
 
                 <div className="stats-grid">
                     <div className="chart-card">
-                        <h3>Divisão por Suporte</h3>
+                        <h3>Acervo por Suporte</h3>
                         <div className="chart-container"><canvas ref={chartTypeRef}></canvas></div>
                     </div>
                     <div className="chart-card">
-                        <h3>Status de Consumo</h3>
+                        <h3>Progresso de Consumo</h3>
                         <div className="chart-container"><canvas ref={chartStatusRef}></canvas></div>
                     </div>
                     <div className="chart-card">
@@ -535,121 +635,96 @@ export default function App() {
                         <div className="chart-container"><canvas ref={chartRatingRef}></canvas></div>
                     </div>
                     <div className="chart-card">
-                        <h3>Top 5 Editoras/Gravadoras</h3>
-                        <div className="chart-container"><canvas ref={chartAuthorRef}></canvas></div>
+                        <h3>Top Editoras / Gravadoras</h3>
+                        <div className="chart-container"><canvas ref={chartPubRef}></canvas></div>
                     </div>
                 </div>
 
-                <div className="page-footer"><span></span><span>{pageCounter}</span></div>
+                <div className="page-footer"><span>{pageCounter}</span></div>
             </div>
         );
 
         return pages;
     }, [csvData, ownerName]);
 
+    // Lógica para os Gráficos
     useEffect(() => {
         const instances = [];
 
         if (viewMode === 'preview' && chartTypeRef.current && window.Chart && csvData.length > 0) {
             window.Chart.defaults.font.family = "'Inter', 'Helvetica Neue', sans-serif";
-            window.Chart.defaults.color = "#777";
+            window.Chart.defaults.color = "#222";
 
             const catCount = {};
-            const statusCount = {};
-            const ratingCount = { 'Nota 5': 0, 'Nota 4': 0, 'Nota 3': 0, 'Nota 2': 0, 'Nota 1': 0 }; // Removido S/ Nota
+            let statusConcluido = 0; let statusNaoIniciado = 0;
+            const ratingCount = { 'Nota 5': 0, 'Nota 4': 0, 'Nota 3': 0, 'Nota 2': 0, 'Nota 1': 0 };
             const pubCount = {};
-            
-            let totP = 0, totF = 0, totM = 0, totH = 0;
 
             csvData.forEach(item => {
-                const catInfo = getCategoryInfo(item['Tipo']);
-                const cat = catInfo.substring(2);
-                catCount[cat] = (catCount[cat] || 0) + 1;
+                const cat = getCategoryInfo(item['Tipo']);
+                const cleanCat = cat.substring(2);
+                catCount[cleanCat] = (catCount[cleanCat] || 0) + 1;
                 
                 let nota = parseFloat((item['Nota'] || '0').replace(',', '.'));
-                
-                // Status Inteligente (Considerando nota para mídias sem status manual)
-                let stat = item['Status'] || 'Não Definido';
-                if (cat === 'DISCOS' || cat === 'VÍDEO') {
-                    stat = nota > 0 ? 'Concluído' : 'Não Iniciado';
-                }
-                statusCount[stat] = (statusCount[stat] || 0) + 1;
+                if (isNaN(nota)) nota = 0;
 
-                // Ratings (Excluindo 0 e NaN)
+                // Status Logic
+                if (cat === '2 DISCOS' || cat === '3 VÍDEO') {
+                    if (nota > 0) statusConcluido++;
+                    else statusNaoIniciado++;
+                } else {
+                    const st = (item['Status'] || '').toLowerCase();
+                    if (st === 'concluído') statusConcluido++;
+                    else statusNaoIniciado++;
+                }
+
+                // Ratings (Excludes 0)
                 if (nota === 5) ratingCount['Nota 5']++;
                 else if (nota >= 4) ratingCount['Nota 4']++;
                 else if (nota >= 3) ratingCount['Nota 3']++;
                 else if (nota >= 2) ratingCount['Nota 2']++;
-                else if (nota > 0) ratingCount['Nota 1']++;
+                else if (nota >= 1) ratingCount['Nota 1']++;
 
-                // Publisher Count
-                const publisher = item['Editora/Gravadora'] || item['Produtora'] || item['Desenvolvedora'] || '';
-                if(publisher && publisher.trim() !== '') {
-                    pubCount[publisher.trim()] = (pubCount[publisher.trim()] || 0) + 1;
+                // Publishers
+                let pub = item['Editora/Gravadora'];
+                if (cat === '4 GAMES') pub = item['Autor/Desenvolvedor'];
+                if (pub && pub.trim() !== '') {
+                    pubCount[pub] = (pubCount[pub] || 0) + 1;
                 }
-
-                // Agregados
-                const timeVal = parseInt(item['Páginas/Tempo'] || item['Faixas'] || item['Minutos'] || item['Horas'] || 0);
-                if (cat === 'LIVROS') totP += timeVal;
-                if (cat === 'DISCOS') totF += timeVal;
-                if (cat === 'VÍDEO') totM += timeVal;
-                if (cat === 'GAMES') totH += timeVal;
             });
 
-            // Atualiza o DOM dos totais
-            document.getElementById('tot-paginas').innerText = totP;
-            document.getElementById('tot-faixas').innerText = totF;
-            document.getElementById('tot-minutos').innerText = totM;
-            document.getElementById('tot-horas').innerText = totH;
-
-            // Ordenando Top Editoras
             const sortedPubs = Object.entries(pubCount).sort((a, b) => b[1] - a[1]).slice(0, 5);
-
-            // Paleta Estrita: Pink, Cyan, Gold, White/Black, Black
-            const paletteStrict = ['#FF007F', '#008B8B', '#C5A059', '#FFFFFF', '#000000'];
+            const palette = ['#FF007F', '#008B8B', '#C5A059', '#222222', '#FFFFFF'];
 
             instances.push(new window.Chart(chartTypeRef.current, {
-                type: 'bar',
-                data: {
-                    labels: Object.keys(catCount),
-                    datasets: [{ label: 'Itens', data: Object.values(catCount), backgroundColor: paletteStrict, 
-                                 borderColor: '#000', borderWidth: [0,0,0,2,0], borderRadius: 4 }]
-                },
-                options: { animation: false, responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+                type: 'doughnut',
+                data: { labels: Object.keys(catCount), datasets: [{ data: Object.values(catCount), backgroundColor: palette, borderWidth: 2, borderColor: '#222' }] },
+                options: { animation: false, responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
             }));
 
             instances.push(new window.Chart(chartStatusRef.current, {
-                type: 'doughnut',
-                data: {
-                    labels: Object.keys(statusCount),
-                    datasets: [{ data: Object.values(statusCount), backgroundColor: paletteStrict, borderColor: '#000', borderWidth: 1 }]
-                },
-                options: { animation: false, responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+                type: 'pie',
+                data: { labels: ['Concluídos', 'Na Fila'], datasets: [{ data: [statusConcluido, statusNaoIniciado], backgroundColor: ['#008B8B', '#FF007F'], borderWidth: 2, borderColor: '#222' }] },
+                options: { animation: false, responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
             }));
 
             instances.push(new window.Chart(chartRatingRef.current, {
                 type: 'bar',
-                data: {
-                    labels: Object.keys(ratingCount),
-                    datasets: [{ label: 'Qtd', data: Object.values(ratingCount), backgroundColor: '#008B8B', borderRadius: 4 }]
-                },
+                data: { labels: Object.keys(ratingCount), datasets: [{ label: 'Itens', data: Object.values(ratingCount), backgroundColor: '#C5A059', borderColor: '#222', borderWidth: 2 }] },
                 options: { animation: false, responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
             }));
 
-            instances.push(new window.Chart(chartAuthorRef.current, {
+            instances.push(new window.Chart(chartPubRef.current, {
                 type: 'bar',
-                data: {
-                    labels: sortedPubs.map(a => a[0].length > 15 ? a[0].substring(0, 15) + '...' : a[0]),
-                    datasets: [{ label: 'Qtd', data: sortedPubs.map(a => a[1]), backgroundColor: '#FF007F', borderRadius: 4 }]
-                },
+                data: { labels: sortedPubs.map(a => a[0].length > 12 ? a[0].substring(0, 12) + '...' : a[0]), datasets: [{ label: 'Obras', data: sortedPubs.map(a => a[1]), backgroundColor: '#FFFFFF', borderColor: '#222', borderWidth: 2 }] },
                 options: { indexAxis: 'y', animation: false, responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
             }));
         }
 
-        return () => instances.forEach(instance => instance.destroy());
+        return () => { instances.forEach(instance => instance.destroy()); };
     }, [viewMode, csvData]);
 
-    const handlePrint = () => window.print();
+    const handlePrint = () => { window.print(); };
 
     if (!scriptsLoaded) return <div style={{ padding: 40, textAlign: 'center' }}>Iniciando o sistema...</div>;
 
@@ -659,8 +734,8 @@ export default function App() {
 
             {viewMode === 'upload' && (
                 <div className="app-ui no-print">
-                    <h1>Catálogo Editorial</h1>
-                    <p>Importe sua coleção em formato CSV. O layout editorial será gerado fluidamente para máxima otimização do espaço em A4.</p>
+                    <h1>Catálogo Tipográfico</h1>
+                    <p>Importe sua coleção em formato CSV. Devido ao tamanho da sua coleção, utilizaremos o gerador de PDF nativo do navegador para máxima qualidade.</p>
                     
                     <input type="file" ref={fileInputRef} accept=".csv" style={{ display: 'none' }} onChange={handleFileUpload} />
                     
@@ -675,9 +750,7 @@ export default function App() {
 
                     <div style={{ marginBottom: '30px' }}>
                         <label htmlFor="owner-name" style={{ fontSize: '0.85em', color: '#666', textTransform: 'uppercase', letterSpacing: '1px' }}>Dono da Coleção</label>
-                        <input type="text" id="owner-name" placeholder="Nome na capa..." value={ownerName} onChange={(e) => setOwnerName(e.target.value)}
-                            style={{ width: '100%', padding: '12px 0', border: 'none', borderBottom: '1px solid #ccc', background: 'transparent', outline: 'none', fontSize: '1.1em', fontFamily: 'inherit' }} 
-                        />
+                        <input type="text" id="owner-name" placeholder="Nome na capa..." value={ownerName} onChange={(e) => setOwnerName(e.target.value)} style={{ width: '100%', padding: '12px 0', border: 'none', borderBottom: '1px solid #ccc', background: 'transparent', outline: 'none', fontSize: '1.1em', fontFamily: 'inherit' }} />
                     </div>
 
                     <button className="primary-btn" onClick={() => setViewMode('preview')} disabled={csvData.length === 0}>
@@ -692,7 +765,6 @@ export default function App() {
                         <button onClick={() => setViewMode('upload')}>← Voltar</button>
                         <button className="print-btn" onClick={handlePrint}>Salvar PDF / Imprimir</button>
                     </div>
-
                     {pdfPages}
                 </div>
             )}
