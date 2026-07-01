@@ -103,7 +103,7 @@ const globalCSS = `
       height: 100%; padding-left: 15mm; position: relative; z-index: 10;
   }
   
-  .cover-subtitle { font-size: 1.5em; font-weight: 300; margin: 0 0 5px 0; color: var(--gray); text-transform: uppercase; letter-spacing: 0px;}
+  .cover-subtitle { font-size: 0.85em; font-weight: 600; margin: 0 0 8px 0; color: var(--gray); text-transform: uppercase; letter-spacing: 3px;}
   
   .category-title { 
       font-size: 6.5em; margin: 0; line-height: 1; letter-spacing: 2px; text-transform: uppercase;
@@ -249,8 +249,12 @@ const getCategoryInfo = (tipo) => {
     return '5 OUTROS';
 };
 
-const getSortKey = (item) => {
+const getSortKey = (item, cat) => {
     if (!item) return '';
+    // REGRA ESPECÍFICA: Games apenas ordenam pelo Título.
+    if (cat === '4 GAMES') {
+        return safeString(item['Título']).trim();
+    }
     const autor = safeString(item['Autor/Desenvolvedor']).trim();
     if (autor && autor.toLowerCase() !== 'various') return autor;
     return safeString(item['Título']).trim();
@@ -258,6 +262,22 @@ const getSortKey = (item) => {
 
 const getBaseWork = (title) => {
     return safeString(title).split(/[:\-]/)[0].trim().toLowerCase() || 'desconhecido';
+};
+
+const getItemDisplayLabel = (item) => {
+    const author = safeString(item['Autor/Desenvolvedor']).trim();
+    const title = safeString(item['Título']).trim();
+    
+    let label = title;
+    if (author && author.toLowerCase() !== 'various') {
+        label = `${author} - ${title}`;
+    }
+    
+    // Truncar para caber bem no layout do sumário
+    if (label.length > 55) {
+        return label.substring(0, 55) + '...';
+    }
+    return label;
 };
 
 // Estimativa Matemática de Altura p/ Grelha
@@ -490,14 +510,39 @@ export default function App() {
         const authorColorMap = {};
 
         sortedCategories.forEach(cat => {
+            // Ordenação avançada com base nas categorias
             grouped[cat].sort((a, b) => {
-                const keyA = getSortKey(a);
-                const keyB = getSortKey(b);
-                return keyA.localeCompare(keyB, 'pt', { numeric: true, sensitivity: 'base' });
+                if (cat === '4 GAMES') {
+                    // Games são puramente alfabéticos pelo título
+                    const titleA = safeString(a['Título']).trim().toLowerCase();
+                    const titleB = safeString(b['Título']).trim().toLowerCase();
+                    return titleA.localeCompare(titleB, 'pt', { numeric: true, sensitivity: 'base' });
+                } else {
+                    // Outras categorias por Autor (fallback p/ título) -> Volume/Data
+                    const keyA = getSortKey(a, cat).toLowerCase();
+                    const keyB = getSortKey(b, cat).toLowerCase();
+                    const cmp = keyA.localeCompare(keyB, 'pt', { numeric: true, sensitivity: 'base' });
+                    if (cmp !== 0) return cmp;
+
+                    // Desempate de autores iguais: Volume ou Data
+                    const volA = parseFloat(safeString(a['Volume']).replace(',', '.'));
+                    const volB = parseFloat(safeString(b['Volume']).replace(',', '.'));
+                    if (!isNaN(volA) && !isNaN(volB)) {
+                        if (volA !== volB) return volA - volB;
+                    } else if (!isNaN(volA)) { return -1;
+                    } else if (!isNaN(volB)) { return 1; }
+
+                    const anoA = parseInt(safeString(a['Ano']), 10) || 0;
+                    const anoB = parseInt(safeString(b['Ano']), 10) || 0;
+                    if (anoA !== anoB) return anoA - anoB;
+
+                    return safeString(a['Título']).localeCompare(safeString(b['Título']), 'pt', { sensitivity: 'base' });
+                }
             });
 
+            // Atribuição de cores para os blocos
             grouped[cat].forEach(item => {
-                let authorKey = getSortKey(item);
+                let authorKey = getSortKey(item, cat);
                 if (authorColorMap[authorKey] === undefined) {
                     let available = [0, 1, 2].filter(c => c !== globalPrevColor);
                     let nextColor = available[Math.floor(Math.random() * available.length)];
@@ -509,11 +554,11 @@ export default function App() {
             });
         });
 
-        // 1. CAPA PRINCIPAL (Não conta número visível no rodapé, mas é a página 1)
+        // 1. CAPA PRINCIPAL 
         pages.push(<CoverPage key="main-cover" isMain={true} ownerName={ownerName} dateStr={dateStr} colorIndex={Math.floor(Math.random()*3)} />);
         
-        const tocIndex = pages.length; // Guarda o local onde o SUMÁRIO será inserido
-        pageCounter++; // O Sumário será a página 2
+        const tocIndex = pages.length; 
+        pageCounter++; 
         
         const tocData = [];
 
@@ -521,15 +566,16 @@ export default function App() {
             const cleanCatName = cat.substring(2);
             const catItems = grouped[cat];
             
-            // Dados para o Sumário
-            const firstId = catItems[0]['Código Arquivístico'] || 'S/N';
-            const lastId = catItems[catItems.length - 1]['Código Arquivístico'] || 'S/N';
+            // Dados para o Sumário com primeira e última obra
+            const firstLabel = getItemDisplayLabel(catItems[0]);
+            const lastLabel = getItemDisplayLabel(catItems[catItems.length - 1]);
+
             tocData.push({
                 category: cleanCatName,
                 startPage: pageCounter,
                 count: catItems.length,
-                firstId,
-                lastId
+                firstLabel,
+                lastLabel
             });
 
             // Folha de Rosto da Categoria
@@ -572,8 +618,8 @@ export default function App() {
                         const char = str.charAt(0).toUpperCase();
                         return /[0-9]/.test(char) ? '#' : char;
                     };
-                    const firstLetter = getDictLetter(getSortKey(firstItem));
-                    const lastLetter = getDictLetter(getSortKey(lastItem));
+                    const firstLetter = getDictLetter(getSortKey(firstItem, cat));
+                    const lastLetter = getDictLetter(getSortKey(lastItem, cat));
                     const dictStr = firstLetter === lastLetter ? firstLetter : `${firstLetter} - ${lastLetter}`;
 
                     pages.push(
@@ -585,7 +631,7 @@ export default function App() {
                             
                             <div className="catalog-grid">
                                 {currentPageItems.map((item, idx) => {
-                                    const authKey = getSortKey(item);
+                                    const authKey = getSortKey(item, cat);
                                     const itemColor = colorPalette[authorColorMap[authKey]];
                                     return <ItemCard key={`item-${currentPage}-${idx}`} item={item} accentColor={itemColor} />;
                                 })}
@@ -599,7 +645,6 @@ export default function App() {
             }
         });
 
-        // ESTATÍSTICAS
         pages.push(
             <div className="pdf-page" key="stats-page-1">
                 <div className="page-header"><span className="vcr-font">Estatísticas 1/2</span><span>Visão Geral</span></div>
@@ -633,7 +678,11 @@ export default function App() {
                     <div className="chart-card"><h3>Divisão por Suporte</h3><div className="chart-container"><canvas ref={chartTypeRef}></canvas></div></div>
                     <div className="chart-card"><h3>Status de Consumo</h3><div className="chart-container"><canvas ref={chartStatusRef}></canvas></div></div>
                     <div className="chart-card"><h3>Distribuição de Notas</h3><div className="chart-container"><canvas ref={chartRatingRef}></canvas></div></div>
-                    <div className="chart-card"><h3>Lançamento Ano a Ano</h3><div className="chart-container"><canvas ref={chartDecadeRef}></canvas></div></div>
+                    {/* Gráfico de ano a ano dobrado em largura, via span 2 */}
+                    <div className="chart-card" style={{ gridColumn: 'span 2' }}>
+                        <h3>Lançamento Ano a Ano</h3>
+                        <div className="chart-container" style={{ height: '220px' }}><canvas ref={chartDecadeRef}></canvas></div>
+                    </div>
                 </div>
 
                 <div className="page-footer"><span></span><span>{pageCounter}</span></div>
@@ -648,15 +697,21 @@ export default function App() {
                 <h2 style={{ fontWeight: 300, fontSize: '2em', marginBottom: '15px', marginTop: '5px' }}>Top Autores e Produtoras</h2>
                 
                 <div className="stats-grid" style={{ gridTemplateColumns: '1fr', gap: '20px' }}>
-                    <div className="chart-card"><h3>Top 10 Autores/Desenvolvedoras</h3><div className="chart-container" style={{ height: '220px' }}><canvas ref={chartAuthorRef}></canvas></div></div>
-                    <div className="chart-card"><h3>Top 10 Editoras/Gravadoras/Produtoras</h3><div className="chart-container" style={{ height: '220px' }}><canvas ref={chartPubRef}></canvas></div></div>
+                    {/* Gráficos top 10 com altura de 350px para não ocultarem dados */}
+                    <div className="chart-card">
+                        <h3>Top 10 Autores/Desenvolvedoras</h3>
+                        <div className="chart-container" style={{ height: '350px' }}><canvas ref={chartAuthorRef}></canvas></div>
+                    </div>
+                    <div className="chart-card">
+                        <h3>Top 10 Editoras/Gravadoras/Produtoras</h3>
+                        <div className="chart-container" style={{ height: '350px' }}><canvas ref={chartPubRef}></canvas></div>
+                    </div>
                 </div>
 
                 <div className="page-footer"><span></span><span>{pageCounter}</span></div>
             </div>
         );
 
-        // 2. CRIAÇÃO DA PÁGINA DO SUMÁRIO E INSERÇÃO
         const tocPage = (
             <div className="pdf-page" key="toc-page">
                 <div className="mondrian-decor">
@@ -666,8 +721,7 @@ export default function App() {
                 </div>
                 
                 <div style={{ paddingLeft: '15mm', paddingTop: '15mm', position: 'relative', zIndex: 10, paddingRight: '15mm' }}>
-                    <h1 className="vcr-font" style={{ fontSize: '4.5em', margin: 0, textTransform: 'uppercase', letterSpacing: '2px', WebkitTextStroke: '2px var(--black)', color: 'var(--white)' }}>Sumário</h1>
-                    <h2 style={{ fontSize: '1.2em', fontWeight: 700, color: 'var(--gray)', textTransform: 'uppercase', marginBottom: '30px', borderBottom: '4px solid var(--black)', paddingBottom: '10px' }}>Índice Sistemático de Suportes Físicos</h2>
+                    <h1 className="vcr-font" style={{ fontSize: '4.5em', margin: 0, textTransform: 'uppercase', letterSpacing: '2px', WebkitTextStroke: '2px var(--black)', color: 'var(--white)', marginBottom: '30px', borderBottom: '4px solid var(--black)', paddingBottom: '10px' }}>Sumário</h1>
                     
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
                         {tocData.map((data, index) => {
@@ -681,12 +735,16 @@ export default function App() {
                                 }}>
                                     <div>
                                         <h3 className="vcr-font" style={{ fontSize: '2.5em', margin: 0, textTransform: 'uppercase', color: 'var(--black)' }}>{data.category}</h3>
-                                        <div style={{ fontSize: '0.75em', color: 'var(--gray)', textTransform: 'uppercase', fontWeight: 800, marginTop: '5px' }}>
-                                            <span style={{ color: 'var(--black)' }}>Volumetria:</span> {data.count} Itens <br/>
-                                            <span style={{ color: 'var(--black)' }}>Espectro Arq.:</span> {data.firstId} ➔ {data.lastId}
+                                        <div style={{ fontSize: '0.75em', color: 'var(--gray)', textTransform: 'uppercase', fontWeight: 800, marginTop: '8px' }}>
+                                            <span style={{ color: 'var(--black)' }}>Quantidade:</span> {data.count} Itens <br/>
+                                            <div style={{ marginTop: '5px', lineHeight: '1.4' }}>
+                                                <span style={{ color: 'var(--black)' }}>Primeira:</span> {data.firstLabel} <br/>
+                                                <span style={{ color: 'var(--black)' }}>Última:</span> {data.lastLabel}
+                                            </div>
                                         </div>
                                     </div>
-                                    <div className="vcr-font" style={{ fontSize: '4em', color: accent, WebkitTextStroke: '2px var(--black)', textShadow: '4px 4px 0px rgba(0,0,0,0.1)' }}>
+                                    <div className="vcr-font" style={{ fontSize: '4em', color: accent, WebkitTextStroke: '2px var(--black)', textShadow: '4px 4px 0px rgba(0,0,0,0.1)', display: 'flex', alignItems: 'center' }}>
+                                        <span style={{ fontSize: '0.45em', WebkitTextStroke: '0', textShadow: 'none', color: 'var(--black)', marginRight: '8px', marginTop: '10px' }}>p.</span>
                                         {String(data.startPage).padStart(2, '0')}
                                     </div>
                                 </div>
@@ -695,8 +753,6 @@ export default function App() {
                     </div>
                 </div>
                 
-                {/* O Sumário é a página 2, mas geralmente sumários não recebem numeração de página visível na base. 
-                    Vamos manter o estilo da folha de rosto. */}
                 <div className="page-footer"><span></span><span></span></div>
             </div>
         );
