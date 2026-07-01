@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 
+// Barreira de erros para evitar Tela Branca
 class ErrorBoundary extends React.Component {
     constructor(props) { super(props); this.state = { hasError: false, errorInfo: null }; }
     static getDerivedStateFromError(error) { return { hasError: true, errorInfo: error }; }
@@ -8,11 +9,11 @@ class ErrorBoundary extends React.Component {
             return (
                 <div style={{ padding: 40, color: '#FF007F', textAlign: 'center', fontFamily: 'sans-serif' }}>
                     <h2>Erro Crítico ao Processar o Catálogo</h2>
-                    <p>Ocorreu uma falha ao renderizar. Verifique se o CSV está correto.</p>
+                    <p>Ocorreu uma falha ao ler os dados do seu CSV.</p>
                     <code style={{ background: '#eee', padding: 10, display: 'block', borderRadius: 5 }}>
                         {this.state.errorInfo?.message || String(this.state.errorInfo)}
                     </code>
-                    <button onClick={() => window.location.reload()} style={{ marginTop: 20, padding: '10px 20px', cursor: 'pointer' }}>Recarregar</button>
+                    <button onClick={() => window.location.reload()} style={{ marginTop: 20, padding: '10px 20px', cursor: 'pointer' }}>Recarregar Aplicativo</button>
                 </div>
             );
         }
@@ -43,41 +44,26 @@ const globalCSS = `
       print-color-adjust: exact !important;
   }
 
-  /* ------------- INTERFACE MONDRIAN (BRUTALISTA) ------------- */
+  /* ------------- INTERFACE DE UTILIZADOR ------------- */
   .app-ui {
       max-width: 600px; margin: 10vh auto; background: var(--white);
-      padding: 40px; border: 6px solid var(--black);
-      position: relative;
+      padding: 40px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);
   }
-  
-  .ui-decor-1 { position: absolute; top: -10px; left: -10px; width: 30px; height: 30px; background: var(--pink); border: 4px solid var(--black); z-index: -1; }
-  .ui-decor-2 { position: absolute; bottom: -15px; right: -15px; width: 50px; height: 30px; background: var(--gold); border: 4px solid var(--black); z-index: -1; }
-
-  .app-ui h1 { font-family: 'VT323', monospace; font-weight: 800; font-size: 3.5em; margin-top: 0; text-transform: uppercase; border-bottom: 6px solid var(--black); padding-bottom: 10px; line-height: 1;}
-  .app-ui p { color: var(--black); font-weight: 600; line-height: 1.6; }
+  .app-ui h1 { font-weight: 300; font-size: 2em; margin-top: 0; letter-spacing: -1px; }
+  .app-ui p { color: var(--gray); line-height: 1.6; }
 
   .upload-area {
-      border: 4px dashed var(--black); padding: 40px; text-align: center;
-      cursor: pointer; margin: 30px 0; background: var(--white); transition: 0.2s;
+      border: 1px dashed #ccc; border-radius: 8px; padding: 40px; text-align: center;
+      cursor: pointer; margin: 30px 0; background: var(--light-gray); transition: 0.2s;
   }
-  .upload-area:hover { background: rgba(0, 139, 139, 0.1); border-style: solid; }
-
-  .app-ui input[type="text"] {
-      width: 100%; padding: 15px; border: 4px solid var(--black); background: var(--light-gray); outline: none; 
-      font-size: 1.5em; font-family: 'VT323', monospace; text-transform: uppercase; font-weight: bold; box-sizing: border-box;
-  }
-  .app-ui input[type="text"]:focus { background: var(--white); border-color: var(--pink); }
+  .upload-area:hover { border-color: var(--cyan); background: #f0ffff; }
 
   button.primary-btn {
-      background: var(--black); color: var(--white); border: 4px solid var(--black); 
-      padding: 16px 30px; font-size: 1.5em; cursor: pointer; font-weight: 800; width: 100%; 
-      transition: 0.2s; text-transform: uppercase; font-family: 'VT323', monospace;
+      background: var(--black); color: var(--white); border: none; border-radius: 6px;
+      padding: 16px 30px; font-size: 1em; cursor: pointer; font-weight: 500; width: 100%; transition: 0.2s;
   }
-  button.primary-btn:hover:not(:disabled) { 
-      background: var(--pink); 
-      transform: translate(-5px, -5px);
-  }
-  button.primary-btn:disabled { background: #d0d0d0; border-color: #999; cursor: not-allowed; }
+  button.primary-btn:hover:not(:disabled) { background: var(--pink); }
+  button.primary-btn:disabled { background: #d0d0d0; cursor: not-allowed; }
 
   /* ------------- VISUALIZADOR ------------- */
   .preview-wrapper { padding: 40px 0; display: flex; flex-direction: column; align-items: center; gap: 30px; }
@@ -97,35 +83,13 @@ const globalCSS = `
       page-break-after: always; box-shadow: 0 5px 20px rgba(0,0,0,0.15);
   }
 
-  /* Para blocos de conteúdo contínuos que fluem entre páginas automaticamente (resolve buracos) */
-  .continuous-section {
-      width: 210mm;
-      padding: 25mm 15mm 20mm 15mm; /* Mais margem no topo para evitar o cabeçalho fixo */
-      box-sizing: border-box;
-      background: var(--white);
-  }
-
   .page-header {
-      position: fixed; top: 12mm; left: 15mm; right: 15mm; /* Header fixo no topo de cada página da secção */
-      display: flex; justify-content: space-between; font-size: 0.7em; color: var(--gray);
-      border-bottom: 1px solid #eee; padding-bottom: 5px; text-transform: uppercase; letter-spacing: 1px;
-      z-index: 100; background: var(--white);
-  }
-
-  .page-footer {
-      position: fixed; bottom: 12mm; left: 15mm; right: 15mm;
-      display: flex; justify-content: space-between; font-size: 0.7em; color: var(--gray);
-      border-top: 1px solid #eee; padding-top: 5px;
-      z-index: 100; background: var(--white);
-  }
-
-  /* Static header/footer para páginas isoladas (capa, estatísticas) */
-  .static-header {
       position: absolute; top: 12mm; left: 15mm; right: 15mm;
       display: flex; justify-content: space-between; font-size: 0.7em; color: var(--gray);
       border-bottom: 1px solid #eee; padding-bottom: 5px; text-transform: uppercase; letter-spacing: 1px;
   }
-  .static-footer {
+
+  .page-footer {
       position: absolute; bottom: 12mm; left: 15mm; right: 15mm;
       display: flex; justify-content: space-between; font-size: 0.7em; color: var(--gray);
       border-top: 1px solid #eee; padding-top: 5px;
@@ -139,9 +103,20 @@ const globalCSS = `
       height: 100%; padding-left: 15mm; position: relative; z-index: 10;
   }
   
+  .cover-subtitle { font-size: 1.5em; font-weight: 300; margin: 0 0 5px 0; color: var(--gray); text-transform: uppercase; letter-spacing: 0px;}
+  
   .category-title { 
       font-size: 6.5em; margin: 0; line-height: 1; letter-spacing: 2px; text-transform: uppercase;
       -webkit-text-stroke: 3px currentColor;
+  }
+
+  .cover-owner { 
+      font-size: 13em; margin: 0; line-height: 0.8;
+      background: linear-gradient(135deg, var(--pink) 0%, var(--cyan) 50%, var(--gold) 100%);
+      -webkit-background-clip: text;
+      color: transparent;
+      -webkit-text-stroke: 4px var(--black);
+      filter: drop-shadow(8px 8px 0px rgba(0,0,0,0.2));
   }
 
   .mondrian-decor { position: absolute; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; z-index: 1; }
@@ -149,30 +124,24 @@ const globalCSS = `
   .m-line-h { position: absolute; height: 4px; background: var(--black); left: 0; right: 0; }
   .m-block { position: absolute; }
 
-  /* ------------- GRELHA MONDRIAN ASSIMÉTRICA FLUIDA ------------- */
+  /* ------------- GRELHA GRID PERFEITA DA ESQUERDA PARA A DIREITA ------------- */
   .catalog-grid {
-      column-count: 2; /* Divide em duas colunas */
+      display: grid;
+      grid-template-columns: 1fr 1fr;
       column-gap: 12mm;
-      column-fill: auto; /* Preenche de cima a baixo */
+      row-gap: 6mm;
+      align-items: start;
+      align-content: start;
   }
 
   .catalog-item {
-      break-inside: avoid; /* Não quebra caixas entre colunas ou páginas! */
-      margin-bottom: 7.5mm; /* Espaçamento vertical flexível */
+      display: flow-root; 
       padding: 10px 10px 10px 15px;
       border-left: 4px solid; 
       background: var(--white);
       border-radius: 0 6px 6px 0;
       box-sizing: border-box;
       box-shadow: 2px 2px 10px rgba(0,0,0,0.05); 
-      display: block; /* Garante comportamento normal de bloco */
-  }
-
-  /* Clears float internally */
-  .catalog-item::after {
-      content: "";
-      display: table;
-      clear: both;
   }
 
   .catalog-item.star-5 {
@@ -222,22 +191,15 @@ const globalCSS = `
   .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; width: 100%; }
   .chart-card { background: var(--white); border: 2px solid #eee; border-radius: 8px; padding: 10px; }
   .chart-card h3 { font-size: 0.75em; text-transform: uppercase; color: var(--black); margin-top: 0; margin-bottom: 8px; text-align: center; font-weight: 800; }
-  .chart-container { width: 100%; }
+  .chart-container { height: 160px; width: 100%; }
 
+  /* ------------- REGRAS DE IMPRESSÃO NATIVA ------------- */
   @media print {
       body, html { background-color: var(--white) !important; margin: 0; padding: 0; height: auto !important; }
       .no-print { display: none !important; }
       @page { size: A4 portrait; margin: 0; }
       .preview-wrapper { display: block !important; padding: 0 !important; gap: 0 !important; }
       .pdf-page { margin: 0 !important; box-shadow: none !important; border: none !important; page-break-after: always !important; page-break-inside: avoid !important; }
-      
-      /* Print rules for continuous sections */
-      .continuous-section {
-          padding: 25mm 15mm 20mm 15mm !important;
-          margin: 0 !important; border: none !important; box-shadow: none !important;
-      }
-      .page-header { position: fixed !important; top: 12mm !important; }
-      .page-footer { position: fixed !important; bottom: 12mm !important; }
   }
 `;
 
@@ -256,6 +218,7 @@ const useExternalScripts = () => {
     return loaded;
 };
 
+// Ícones Customizados
 const StarIcon = ({ filled, color }) => (
     <svg className="star" viewBox="0 0 24 24" fill={filled ? color : "none"} stroke={filled ? color : "#aaa"} strokeWidth="2">
         <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
@@ -297,6 +260,35 @@ const getBaseWork = (title) => {
     return safeString(title).split(/[:\-]/)[0].trim().toLowerCase() || 'desconhecido';
 };
 
+// Estimativa Matemática de Altura p/ Grelha
+const estimateItemHeight = (item) => {
+    let nota = parseFloat(safeString(item['Nota']).replace(',', '.'));
+    let h = 8; 
+
+    let titleLen = safeString(item['Título']).length;
+    h += Math.ceil(titleLen / 30) * 4.5; 
+
+    let autor = safeString(item['Autor/Desenvolvedor']).trim();
+    if (autor && autor.toLowerCase() !== 'various') h += 4.5;
+
+    h += 4.5; 
+
+    let rows = 0;
+    if (item['Tipo']) rows++;
+    if (item['Ano']) rows++;
+    if (item['Editora/Gravadora'] || item['Produtora'] || item['Desenvolvedora']) rows++;
+    if (item['Status']) rows++;
+    if (item['Páginas/Tempo'] || item['Faixas'] || item['Minutos'] || item['Horas']) rows++;
+    h += rows * 3.5; 
+
+    let hasCover = safeString(item['URL da Capa']).trim() !== '';
+    if (hasCover) h = Math.max(h, 32); 
+    
+    if (nota === 5) h += 8; 
+
+    return h; 
+};
+
 const StarRating = ({ notaStr }) => {
     let n = parseFloat(safeString(notaStr).replace(',', '.'));
     if (isNaN(n)) n = 0;
@@ -304,9 +296,9 @@ const StarRating = ({ notaStr }) => {
     if (n === 5) return <div className="stars-container"><GiantStarIcon /></div>;
     
     let color = '#aaa';
-    if (n > 0 && n <= 2.9) { color = 'var(--gold)'; }
-    else if (n >= 3 && n <= 3.9) { color = 'var(--cyan)'; }
-    else if (n >= 4) { color = 'var(--pink)'; }
+    if (n > 0 && n <= 2.9) color = 'var(--gold)';
+    else if (n >= 3 && n <= 3.9) color = 'var(--cyan)';
+    else if (n >= 4) color = 'var(--pink)';
 
     const stars = [];
     for (let i = 1; i <= 5; i++) {
@@ -324,7 +316,7 @@ const CoverPage = ({ title, isMain, ownerName, dateStr, colorIndex }) => {
     const accent = palette[colorIndex % 3];
 
     return (
-        <div className="pdf-page" style={{ pageBreakAfter: 'always' }}>
+        <div className="pdf-page">
             <div className="mondrian-decor">
                 <div className="m-line-v" style={{ left: '20mm', backgroundColor: '#e5e5e5' }}></div>
                 <div className="m-line-h" style={{ bottom: '40mm', backgroundColor: '#e5e5e5' }}></div>
@@ -336,19 +328,16 @@ const CoverPage = ({ title, isMain, ownerName, dateStr, colorIndex }) => {
             <div className="cover-page">
                 {isMain ? (
                     <>
-                        <h2 style={{ fontSize: '1.2em', fontWeight: 600, margin: '0 0 5px 0', color: 'var(--gray)', textTransform: 'uppercase', letterSpacing: '2px' }}>
-                            Coleção em Suporte Físico - Memorabilia
-                        </h2>
-                        <h1 className="cover-owner vcr-font" style={{ fontSize: '11em', margin: 0, lineHeight: 0.85, textTransform: 'uppercase' }}>
-                            {ownerName || 'Acervo'}
-                        </h1>
+                        <h2 className="cover-subtitle">Coleção em Suporte Físico - Memorabilia</h2>
+                        <h1 className="cover-owner vcr-font">{ownerName || 'Acervo'}</h1>
                         <div className="cover-meta">
-                            <div style={{ fontSize: '1em', marginTop: '15px', color: 'var(--gray)', fontWeight: 'bold' }}>Gerado a {dateStr}</div>
+                            <div style={{ fontSize: '0.85em', marginTop: '15px' }}>Gerado a {dateStr}</div>
                         </div>
                     </>
                 ) : (
                     <>
-                        <h1 className="category-title vcr-font" style={{ color: accent, fontSize: '8em' }}>{title}</h1>
+                        <h2 className="cover-subtitle">Categoria</h2>
+                        <h1 className="category-title vcr-font" style={{ color: accent }}>{title}</h1>
                     </>
                 )}
             </div>
@@ -370,15 +359,16 @@ const ItemCard = ({ item, accentColor }) => {
 
     let stat = safeString(item['Status']);
     if (cat === 'DISCOS' || cat === 'VÍDEO') {
-        stat = null; 
+        stat = nota > 0 ? 'Concluído' : 'Não Iniciado';
     }
 
     let pLabel = 'EDITORA/GRAVADORA';
     let tLabel = 'PÁGINAS/TEMPO';
+    let isDisco = false;
 
     if(cat === 'LIVROS') { pLabel = 'Editora'; tLabel = 'Páginas'; }
-    if(cat === 'DISCOS') { pLabel = 'Gravadora'; tLabel = 'Faixas'; }
-    if(cat === 'GAMES') { pLabel = 'Desenv.'; tLabel = 'Horas'; }
+    if(cat === 'DISCOS') { pLabel = 'Gravadora'; tLabel = 'Faixas'; isDisco = true; }
+    if(cat === 'GAMES') { pLabel = 'Desenvolvedora'; tLabel = 'Horas'; }
     if(cat === 'VÍDEO') { pLabel = 'Produtora'; tLabel = 'Horas'; }
 
     const urlCapa = safeString(item['URL da Capa']).trim();
@@ -396,15 +386,18 @@ const ItemCard = ({ item, accentColor }) => {
             )}
             {codArq && <div className="item-code">{codArq}</div>}
             <div className="item-title">{titulo}</div>
+            
             {autor && autor.toLowerCase() !== 'various' && cat !== 'GAMES' && (
                 <div className="item-author" style={{ color: accentColor }}>{autor}</div>
             )}
+            
             <StarRating notaStr={safeString(item['Nota'])} />
+            
             <div className="catalog-ficha">
                 {tipo && <div className="ficha-row"><span className="ficha-label">Tipo:</span><span className="ficha-value">{tipo}</span></div>}
                 {ano && <div className="ficha-row"><span className="ficha-label">Ano:</span><span className="ficha-value">{ano}</span></div>}
                 {publisher && <div className="ficha-row"><span className="ficha-label">{pLabel}:</span><span className="ficha-value">{publisher}</span></div>}
-                {stat && <div className="ficha-row"><span className="ficha-label">Status:</span><span className="ficha-value">{stat}</span></div>}
+                {!isDisco && stat && <div className="ficha-row"><span className="ficha-label">Status:</span><span className="ficha-value">{stat}</span></div>}
                 {timeVal && <div className="ficha-row"><span className="ficha-label">{tLabel}:</span><span className="ficha-value">{timeVal}</span></div>}
             </div>
         </div>
@@ -417,7 +410,6 @@ export default function App() {
     const [fileName, setFileName] = useState("");
     const [ownerName, setOwnerName] = useState("");
     const [viewMode, setViewMode] = useState('upload'); 
-    const [uiColor, setUiColor] = useState('var(--cyan)');
     
     const fileInputRef = useRef(null);
     
@@ -427,11 +419,6 @@ export default function App() {
     const chartDecadeRef = useRef(null); 
     const chartAuthorRef = useRef(null);
     const chartPubRef = useRef(null); 
-
-    useEffect(() => {
-        const colors = ['var(--cyan)', 'var(--pink)', 'var(--gold)'];
-        setUiColor(colors[Math.floor(Math.random() * colors.length)]);
-    }, [viewMode]);
 
     const handleFileUpload = (e) => {
         const file = e.target.files[0];
@@ -484,8 +471,8 @@ export default function App() {
     const pdfPages = useMemo(() => {
         if (!csvData.length) return [];
         
-        const contentSections = [];
-        let logicalPage = 1; // Página inicial para o conteúdo
+        const pages = [];
+        let pageCounter = 1; 
         const dateStr = new Date().toLocaleDateString('pt-PT');
 
         const grouped = {};
@@ -501,7 +488,6 @@ export default function App() {
 
         let globalPrevColor = -1;
         const authorColorMap = {};
-        const tocData = [];
 
         sortedCategories.forEach(cat => {
             grouped[cat].sort((a, b) => {
@@ -516,73 +502,110 @@ export default function App() {
                     let available = [0, 1, 2].filter(c => c !== globalPrevColor);
                     let nextColor = available[Math.floor(Math.random() * available.length)];
                     authorColorMap[authorKey] = nextColor;
-                    globalPrevColor = nextColor;
+                    globalPrevColor = nextColor; 
+                } else {
+                    globalPrevColor = authorColorMap[authorKey]; 
                 }
             });
         });
 
-        // 1. Montagem Contínua das Secções do Catálogo
+        // 1. CAPA PRINCIPAL (Não conta número visível no rodapé, mas é a página 1)
+        pages.push(<CoverPage key="main-cover" isMain={true} ownerName={ownerName} dateStr={dateStr} colorIndex={Math.floor(Math.random()*3)} />);
+        
+        const tocIndex = pages.length; // Guarda o local onde o SUMÁRIO será inserido
+        pageCounter++; // O Sumário será a página 2
+        
+        const tocData = [];
+
         sortedCategories.forEach((cat, catIndex) => {
             const cleanCatName = cat.substring(2);
-            const items = grouped[cat];
+            const catItems = grouped[cat];
             
-            const formatItemStr = (item) => {
-                if (!item) return '';
-                const title = safeString(item['Título']) || 'Sem Título';
-                const author = safeString(item['Autor/Desenvolvedor']).trim();
-                if (author && author.toLowerCase() !== 'various' && getCategoryInfo(item['Tipo']) !== '4 GAMES') {
-                    return `${author} - ${title}`;
-                }
-                return title;
-            };
-
-            // Guarda info para o Sumário com uma estimativa grosseira da página (visto que o navegador paginará automaticamente agora)
+            // Dados para o Sumário
+            const firstId = catItems[0]['Código Arquivístico'] || 'S/N';
+            const lastId = catItems[catItems.length - 1]['Código Arquivístico'] || 'S/N';
             tocData.push({
                 category: cleanCatName,
-                startPage: logicalPage, // O número correto para o início
-                count: items.length,
-                firstStr: formatItemStr(items[0]),
-                lastStr: formatItemStr(items[items.length - 1])
+                startPage: pageCounter,
+                count: catItems.length,
+                firstId,
+                lastId
             });
 
-            // Adiciona Folha de Rosto (A folha de rosto consome 1 página inteira)
-            contentSections.push(
-                <CoverPage key={`cover-${cat}`} title={cleanCatName} isMain={false} colorIndex={catIndex + 1} />
-            );
-            logicalPage++; // Incrementa página por conta da folha de rosto
+            // Folha de Rosto da Categoria
+            pages.push(<CoverPage key={`cover-${cat}`} title={cleanCatName} isMain={false} colorIndex={catIndex + 1} />);
+            pageCounter++;
+            
+            // Paginação dos Itens
+            let allItemsToProcess = [...grouped[cat]];
+            const MAX_HEIGHT_MM = 240; 
+            const ROW_GAP = 6;
 
-            // Usa a secção contínua e a classe CSS columns para auto-paginação fluída
-            // O navegador cuidará do limite de páginas. Retomamos a Counter-CSS nativa do CSS apenas para visual web, mas omitimos no HTML para confiar na impressão.
-            contentSections.push(
-                <div className="continuous-section" key={`section-${cat}`}>
-                    {/* Header fixo que repete na impressão (depende de suporte do navegador) */}
-                    <div className="page-header">
-                        <span className="vcr-font">{cleanCatName}</span>
-                        <span>Catálogo</span>
-                    </div>
+            while (allItemsToProcess.length > 0) {
+                let currentPageItems = [];
+                let currentHeight = 0;
+
+                while (allItemsToProcess.length > 0) {
+                    let i1 = allItemsToProcess[0];
+                    let i2 = allItemsToProcess[1]; 
+
+                    let h1 = estimateItemHeight(i1);
+                    let h2 = i2 ? estimateItemHeight(i2) : 0;
+                    let rowHeight = Math.max(h1, h2) + ROW_GAP;
+
+                    if (currentHeight + rowHeight > MAX_HEIGHT_MM && currentPageItems.length > 0) {
+                        break;
+                    }
+
+                    currentPageItems.push(allItemsToProcess.shift());
+                    if (i2) currentPageItems.push(allItemsToProcess.shift());
+                    currentHeight += rowHeight;
+                }
+
+                if (currentPageItems.length > 0) {
+                    const currentPage = pageCounter;
                     
-                    <div className="catalog-grid">
-                        {items.map((item, idx) => {
-                            const authKey = getSortKey(item);
-                            const itemColor = colorPalette[authorColorMap[authKey]];
-                            return <ItemCard key={`item-${cat}-${idx}`} item={item} accentColor={itemColor} />;
-                        })}
-                    </div>
-                    
-                    {/* Rodapé fixo - a numeração real aqui é contínua e manipulada nativamente pelo Print, mas colocamos a referência lógica */}
-                    <div className="page-footer"><span></span><span>{logicalPage}+</span></div>
-                </div>
-            );
-            // Estimativa de consumo de páginas para as próximas categorias no Sumário
-            // Uma média segura é de 10 itens por página.
-            logicalPage += Math.ceil(items.length / 10); 
+                    let firstItem = currentPageItems[0];
+                    let lastItem = currentPageItems[currentPageItems.length-1];
+                    const getDictLetter = (str) => {
+                        if (!str) return '?';
+                        const char = str.charAt(0).toUpperCase();
+                        return /[0-9]/.test(char) ? '#' : char;
+                    };
+                    const firstLetter = getDictLetter(getSortKey(firstItem));
+                    const lastLetter = getDictLetter(getSortKey(lastItem));
+                    const dictStr = firstLetter === lastLetter ? firstLetter : `${firstLetter} - ${lastLetter}`;
+
+                    pages.push(
+                        <div className="pdf-page" key={`page-${cat}-${currentPage}`}>
+                            <div className="page-header">
+                                <span className="vcr-font">{cleanCatName}</span>
+                                <span>{dictStr}</span>
+                            </div>
+                            
+                            <div className="catalog-grid">
+                                {currentPageItems.map((item, idx) => {
+                                    const authKey = getSortKey(item);
+                                    const itemColor = colorPalette[authorColorMap[authKey]];
+                                    return <ItemCard key={`item-${currentPage}-${idx}`} item={item} accentColor={itemColor} />;
+                                })}
+                            </div>
+                            
+                            <div className="page-footer"><span></span><span>{currentPage}</span></div>
+                        </div>
+                    );
+                    pageCounter++;
+                }
+            }
         });
 
-        // 2. Montagem de Estatísticas Isoladas
-        contentSections.push(
+        // ESTATÍSTICAS
+        pages.push(
             <div className="pdf-page" key="stats-page-1">
-                <div className="static-header"><span className="vcr-font">Estatísticas 1/2</span><span>Visão Geral</span></div>
+                <div className="page-header"><span className="vcr-font">Estatísticas 1/2</span><span>Visão Geral</span></div>
+                
                 <h2 style={{ fontWeight: 300, fontSize: '2em', marginBottom: '15px', marginTop: '5px' }}>Visão Geral do Acervo</h2>
+                
                 <div className="stats-header-bar">
                     <div className="stat-block">
                         <div className="stat-num">{aggregates.pTot}</div>
@@ -605,53 +628,46 @@ export default function App() {
                         <div className="stat-lbl">Horas de Game</div>
                     </div>
                 </div>
+
                 <div className="stats-grid">
-                    <div className="chart-card"><h3>Divisão por Suporte</h3><div className="chart-container" style={{height:'160px'}}><canvas ref={chartTypeRef}></canvas></div></div>
-                    <div className="chart-card"><h3>Status de Consumo</h3><div className="chart-container" style={{height:'160px'}}><canvas ref={chartStatusRef}></canvas></div></div>
-                    <div className="chart-card"><h3>Distribuição de Notas</h3><div className="chart-container" style={{height:'160px'}}><canvas ref={chartRatingRef}></canvas></div></div>
-                    
-                    <div className="chart-card" style={{ gridColumn: '1 / -1' }}>
-                        <h3>Lançamento Ano a Ano</h3>
-                        <div className="chart-container" style={{ height: '380px' }}><canvas ref={chartDecadeRef}></canvas></div>
-                    </div>
+                    <div className="chart-card"><h3>Divisão por Suporte</h3><div className="chart-container"><canvas ref={chartTypeRef}></canvas></div></div>
+                    <div className="chart-card"><h3>Status de Consumo</h3><div className="chart-container"><canvas ref={chartStatusRef}></canvas></div></div>
+                    <div className="chart-card"><h3>Distribuição de Notas</h3><div className="chart-container"><canvas ref={chartRatingRef}></canvas></div></div>
+                    <div className="chart-card"><h3>Lançamento Ano a Ano</h3><div className="chart-container"><canvas ref={chartDecadeRef}></canvas></div></div>
                 </div>
-                <div className="static-footer"><span></span><span>{logicalPage}</span></div>
+
+                <div className="page-footer"><span></span><span>{pageCounter}</span></div>
             </div>
         );
-        logicalPage++;
+        pageCounter++;
 
-        contentSections.push(
+        pages.push(
             <div className="pdf-page" key="stats-page-2">
-                <div className="static-header"><span className="vcr-font">Estatísticas 2/2</span><span>Os Maiores</span></div>
+                <div className="page-header"><span className="vcr-font">Estatísticas 2/2</span><span>Os Maiores</span></div>
+                
                 <h2 style={{ fontWeight: 300, fontSize: '2em', marginBottom: '15px', marginTop: '5px' }}>Top Autores e Produtoras</h2>
+                
                 <div className="stats-grid" style={{ gridTemplateColumns: '1fr', gap: '20px' }}>
-                    <div className="chart-card" style={{ gridColumn: '1 / -1' }}>
-                        <h3>Top 10 Autores/Desenvolvedoras</h3>
-                        <div className="chart-container" style={{ height: '380px' }}><canvas ref={chartAuthorRef}></canvas></div>
-                    </div>
-                    <div className="chart-card" style={{ gridColumn: '1 / -1' }}>
-                        <h3>Top 10 Editoras/Gravadoras/Produtoras</h3>
-                        <div className="chart-container" style={{ height: '380px' }}><canvas ref={chartPubRef}></canvas></div>
-                    </div>
+                    <div className="chart-card"><h3>Top 10 Autores/Desenvolvedoras</h3><div className="chart-container" style={{ height: '220px' }}><canvas ref={chartAuthorRef}></canvas></div></div>
+                    <div className="chart-card"><h3>Top 10 Editoras/Gravadoras/Produtoras</h3><div className="chart-container" style={{ height: '220px' }}><canvas ref={chartPubRef}></canvas></div></div>
                 </div>
-                <div className="static-footer"><span></span><span>{logicalPage}</span></div>
+
+                <div className="page-footer"><span></span><span>{pageCounter}</span></div>
             </div>
         );
 
-        // 3. Montagem Final (Capa + Sumário + Conteúdo)
-        const finalRender = [];
-        
-        finalRender.push(<CoverPage key="main-cover" isMain={true} ownerName={ownerName} dateStr={dateStr} colorIndex={0} />);
-        
-        finalRender.push(
-            <div className="pdf-page" key="toc-page" style={{ pageBreakAfter: 'always' }}>
+        // 2. CRIAÇÃO DA PÁGINA DO SUMÁRIO E INSERÇÃO
+        const tocPage = (
+            <div className="pdf-page" key="toc-page">
                 <div className="mondrian-decor">
-                    <div className="m-line-v" style={{ left: '15mm', backgroundColor: '#e5e5e5' }}></div>
-                    <div className="m-line-h" style={{ top: '30mm', backgroundColor: '#e5e5e5' }}></div>
+                    <div className="m-line-v" style={{ left: '15mm', backgroundColor: 'var(--black)' }}></div>
+                    <div className="m-line-h" style={{ top: '30mm', backgroundColor: 'var(--black)' }}></div>
                     <div className="m-block" style={{ top: '15mm', left: '15mm', width: '10mm', height: '15mm', backgroundColor: 'var(--pink)' }}></div>
                 </div>
-                <div className="cover-page" style={{ justifyContent: 'flex-start', paddingTop: '15mm', paddingRight: '15mm' }}>
-                    <h1 className="vcr-font" style={{ fontSize: '5em', margin: '0 0 30px 0', textTransform: 'uppercase', letterSpacing: '2px', WebkitTextStroke: '2px var(--black)', color: 'var(--white)', borderBottom: '4px solid var(--black)', paddingBottom: '10px' }}>SUMÁRIO</h1>
+                
+                <div style={{ paddingLeft: '15mm', paddingTop: '15mm', position: 'relative', zIndex: 10, paddingRight: '15mm' }}>
+                    <h1 className="vcr-font" style={{ fontSize: '4.5em', margin: 0, textTransform: 'uppercase', letterSpacing: '2px', WebkitTextStroke: '2px var(--black)', color: 'var(--white)' }}>Sumário</h1>
+                    <h2 style={{ fontSize: '1.2em', fontWeight: 700, color: 'var(--gray)', textTransform: 'uppercase', marginBottom: '30px', borderBottom: '4px solid var(--black)', paddingBottom: '10px' }}>Índice Sistemático de Suportes Físicos</h2>
                     
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
                         {tocData.map((data, index) => {
@@ -659,23 +675,18 @@ export default function App() {
                             return (
                                 <div key={index} style={{ 
                                     display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                                    border: '4px solid var(--black)', borderLeftWidth: '12px', borderLeftColor: accent,
-                                    padding: '20px 30px', background: 'var(--white)',
-                                    boxShadow: '6px 6px 0px rgba(0,0,0,0.1)'
+                                    border: '4px solid var(--black)', borderLeftWidth: '12px', borderLeftStyle: 'solid', borderLeftColor: accent,
+                                    padding: '15px 25px', background: 'var(--white)',
+                                    boxShadow: '4px 4px 0px rgba(0,0,0,0.1)'
                                 }}>
-                                    <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', height: '100%', maxWidth: '75%' }}>
+                                    <div>
                                         <h3 className="vcr-font" style={{ fontSize: '2.5em', margin: 0, textTransform: 'uppercase', color: 'var(--black)' }}>{data.category}</h3>
-                                        <div style={{ fontSize: '0.85em', color: 'var(--black)', fontWeight: 800, marginTop: '10px', textTransform: 'uppercase' }}>
-                                            QUANTIDADE: <span style={{ color: 'var(--gray)', fontWeight: 600 }}>{data.count} ITENS</span>
-                                        </div>
-                                        <div style={{ fontSize: '0.7em', color: 'var(--gray)', fontWeight: 600, marginTop: '6px', lineHeight: '1.4' }}>
-                                            <span style={{color: 'var(--black)'}}>{data.firstStr}</span> <br/>
-                                            <span style={{color: 'var(--black)'}}>{data.lastStr}</span>
+                                        <div style={{ fontSize: '0.75em', color: 'var(--gray)', textTransform: 'uppercase', fontWeight: 800, marginTop: '5px' }}>
+                                            <span style={{ color: 'var(--black)' }}>Volumetria:</span> {data.count} Itens <br/>
+                                            <span style={{ color: 'var(--black)' }}>Espectro Arq.:</span> {data.firstId} ➔ {data.lastId}
                                         </div>
                                     </div>
-                                    
-                                    <div className="vcr-font" style={{ fontSize: '4.5em', color: accent, WebkitTextStroke: '1px var(--black)', textShadow: '3px 3px 0px rgba(0,0,0,0.1)', whiteSpace: 'nowrap', display: 'flex', alignItems: 'baseline' }}>
-                                        <span style={{fontSize: '0.3em', WebkitTextStroke: '0', color: 'var(--gray)', textShadow: 'none', marginRight: '6px', letterSpacing: '0'}}>p.</span>
+                                    <div className="vcr-font" style={{ fontSize: '4em', color: accent, WebkitTextStroke: '2px var(--black)', textShadow: '4px 4px 0px rgba(0,0,0,0.1)' }}>
                                         {String(data.startPage).padStart(2, '0')}
                                     </div>
                                 </div>
@@ -683,12 +694,16 @@ export default function App() {
                         })}
                     </div>
                 </div>
+                
+                {/* O Sumário é a página 2, mas geralmente sumários não recebem numeração de página visível na base. 
+                    Vamos manter o estilo da folha de rosto. */}
+                <div className="page-footer"><span></span><span></span></div>
             </div>
         );
 
-        finalRender.push(...contentSections);
+        pages.splice(tocIndex, 0, tocPage);
 
-        return finalRender;
+        return pages;
     }, [csvData, ownerName, aggregates]);
 
     useEffect(() => {
@@ -701,6 +716,7 @@ export default function App() {
             const catCount = {};
             const statusCount = {};
             const ratingCount = { 'Nota 5': 0, 'Nota 4': 0, 'Nota 3': 0, 'Nota 2': 0, 'Nota 1': 0 }; 
+            
             const authorCount = {};
             const pubCount = {};
             const yearCount = {};
@@ -808,24 +824,22 @@ export default function App() {
                 <style dangerouslySetInnerHTML={{ __html: globalCSS }} />
 
                 {viewMode === 'upload' && (
-                    <div className="app-ui no-print" style={{ boxShadow: `15px 15px 0px ${uiColor}` }}>
-                        <div className="ui-decor-1"></div>
-                        <div className="ui-decor-2"></div>
+                    <div className="app-ui no-print">
                         <h1>Catálogo Editorial</h1>
-                        <p>Importe a sua coleção em formato CSV. O layout editorial será gerado com matemática precisa para otimização de espaço em A4.</p>
+                        <p>Importe a sua coleção em formato CSV. O layout editorial será gerado fluidamente para a máxima otimização de espaço em A4.</p>
                         
                         <input type="file" ref={fileInputRef} accept=".csv" style={{ display: 'none' }} onChange={handleFileUpload} />
                         
                         <div className="upload-area" onClick={() => fileInputRef.current?.click()}>
-                            <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#222" strokeWidth="2" strokeLinecap="square" strokeLinejoin="miter"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-                            <h3 className="vcr-font" style={{ fontSize: '1.8em', color: 'var(--black)', marginTop: '20px' }}>
-                                {fileName ? fileName : 'SELECIONE A SUA PLANILHA .CSV'}
-                            </h3>
+                            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#888" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                            <h3 style={{ fontWeight: 400, color: '#333' }}>{fileName ? fileName : 'Selecione a sua folha de cálculo .csv'}</h3>
                         </div>
 
                         <div style={{ marginBottom: '30px' }}>
-                            <label htmlFor="owner-name" className="vcr-font" style={{ fontSize: '1.2em', color: 'var(--black)' }}>Dono da Coleção:</label>
-                            <input type="text" id="owner-name" placeholder="NOME NA CAPA..." value={ownerName} onChange={(e) => setOwnerName(e.target.value)} />
+                            <label htmlFor="owner-name" style={{ fontSize: '0.85em', color: '#666', textTransform: 'uppercase', letterSpacing: '1px' }}>Dono da Coleção</label>
+                            <input type="text" id="owner-name" placeholder="Nome na capa..." value={ownerName} onChange={(e) => setOwnerName(e.target.value)}
+                                style={{ width: '100%', padding: '12px 0', border: 'none', borderBottom: '1px solid #ccc', background: 'transparent', outline: 'none', fontSize: '1.1em', fontFamily: 'inherit' }} 
+                            />
                         </div>
 
                         <button className="primary-btn" onClick={() => setViewMode('preview')} disabled={csvData.length === 0}>
