@@ -97,13 +97,35 @@ const globalCSS = `
       page-break-after: always; box-shadow: 0 5px 20px rgba(0,0,0,0.15);
   }
 
+  /* Para blocos de conteúdo contínuos que fluem entre páginas automaticamente (resolve buracos) */
+  .continuous-section {
+      width: 210mm;
+      padding: 25mm 15mm 20mm 15mm; /* Mais margem no topo para evitar o cabeçalho fixo */
+      box-sizing: border-box;
+      background: var(--white);
+  }
+
   .page-header {
+      position: fixed; top: 12mm; left: 15mm; right: 15mm; /* Header fixo no topo de cada página da secção */
+      display: flex; justify-content: space-between; font-size: 0.7em; color: var(--gray);
+      border-bottom: 1px solid #eee; padding-bottom: 5px; text-transform: uppercase; letter-spacing: 1px;
+      z-index: 100; background: var(--white);
+  }
+
+  .page-footer {
+      position: fixed; bottom: 12mm; left: 15mm; right: 15mm;
+      display: flex; justify-content: space-between; font-size: 0.7em; color: var(--gray);
+      border-top: 1px solid #eee; padding-top: 5px;
+      z-index: 100; background: var(--white);
+  }
+
+  /* Static header/footer para páginas isoladas (capa, estatísticas) */
+  .static-header {
       position: absolute; top: 12mm; left: 15mm; right: 15mm;
       display: flex; justify-content: space-between; font-size: 0.7em; color: var(--gray);
       border-bottom: 1px solid #eee; padding-bottom: 5px; text-transform: uppercase; letter-spacing: 1px;
   }
-
-  .page-footer {
+  .static-footer {
       position: absolute; bottom: 12mm; left: 15mm; right: 15mm;
       display: flex; justify-content: space-between; font-size: 0.7em; color: var(--gray);
       border-top: 1px solid #eee; padding-top: 5px;
@@ -127,23 +149,30 @@ const globalCSS = `
   .m-line-h { position: absolute; height: 4px; background: var(--black); left: 0; right: 0; }
   .m-block { position: absolute; }
 
-  /* ------------- GRELHA LINHA POR LINHA (MÁXIMA COMPRESSÃO) ------------- */
+  /* ------------- GRELHA MONDRIAN ASSIMÉTRICA FLUIDA ------------- */
   .catalog-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
+      column-count: 2; /* Divide em duas colunas */
       column-gap: 12mm;
-      row-gap: 7.5mm;
-      align-items: start; 
+      column-fill: auto; /* Preenche de cima a baixo */
   }
 
   .catalog-item {
-      display: flow-root; 
+      break-inside: avoid; /* Não quebra caixas entre colunas ou páginas! */
+      margin-bottom: 7.5mm; /* Espaçamento vertical flexível */
       padding: 10px 10px 10px 15px;
       border-left: 4px solid; 
       background: var(--white);
       border-radius: 0 6px 6px 0;
       box-sizing: border-box;
       box-shadow: 2px 2px 10px rgba(0,0,0,0.05); 
+      display: block; /* Garante comportamento normal de bloco */
+  }
+
+  /* Clears float internally */
+  .catalog-item::after {
+      content: "";
+      display: table;
+      clear: both;
   }
 
   .catalog-item.star-5 {
@@ -201,6 +230,14 @@ const globalCSS = `
       @page { size: A4 portrait; margin: 0; }
       .preview-wrapper { display: block !important; padding: 0 !important; gap: 0 !important; }
       .pdf-page { margin: 0 !important; box-shadow: none !important; border: none !important; page-break-after: always !important; page-break-inside: avoid !important; }
+      
+      /* Print rules for continuous sections */
+      .continuous-section {
+          padding: 25mm 15mm 20mm 15mm !important;
+          margin: 0 !important; border: none !important; box-shadow: none !important;
+      }
+      .page-header { position: fixed !important; top: 12mm !important; }
+      .page-footer { position: fixed !important; bottom: 12mm !important; }
   }
 `;
 
@@ -256,35 +293,8 @@ const getSortKey = (item) => {
     return safeString(item['Título']).trim();
 };
 
-// Estimativa extremamente precisa (em mm) para maximizar o número de itens
-const estimateItemHeight = (item) => {
-    let nota = parseFloat(safeString(item['Nota']).replace(',', '.'));
-    let h = 12; // Base padding + borders otimizados
-
-    let titleLen = safeString(item['Título']).length;
-    h += Math.ceil(titleLen / 28) * 4.5; // Estimativa de quebras de linha
-
-    let autor = safeString(item['Autor/Desenvolvedor']).trim();
-    if (autor && autor.toLowerCase() !== 'various') h += 4.5;
-
-    h += 5.5; // Estrelas
-
-    let rows = 0;
-    if (item['Tipo']) rows++;
-    if (item['Ano']) rows++;
-    if (item['Editora/Gravadora'] || item['Produtora'] || item['Desenvolvedora']) rows++;
-    
-    const cat = getCategoryInfo(item['Tipo']).substring(2);
-    if (item['Status'] && cat !== 'DISCOS' && cat !== 'VÍDEO') rows++;
-    
-    if (item['Páginas/Tempo'] || item['Faixas'] || item['Minutos'] || item['Horas']) rows++;
-    h += rows * 4; // Altura rigorosa da Ficha
-
-    let hasCover = safeString(item['URL da Capa']).trim() !== '';
-    if (hasCover) h = Math.max(h, 28); 
-    if (nota === 5) h += 12; // Star 5 grande
-
-    return h; 
+const getBaseWork = (title) => {
+    return safeString(title).split(/[:\-]/)[0].trim().toLowerCase() || 'desconhecido';
 };
 
 const StarRating = ({ notaStr }) => {
@@ -314,7 +324,7 @@ const CoverPage = ({ title, isMain, ownerName, dateStr, colorIndex }) => {
     const accent = palette[colorIndex % 3];
 
     return (
-        <div className="pdf-page">
+        <div className="pdf-page" style={{ pageBreakAfter: 'always' }}>
             <div className="mondrian-decor">
                 <div className="m-line-v" style={{ left: '20mm', backgroundColor: '#e5e5e5' }}></div>
                 <div className="m-line-h" style={{ bottom: '40mm', backgroundColor: '#e5e5e5' }}></div>
@@ -326,20 +336,19 @@ const CoverPage = ({ title, isMain, ownerName, dateStr, colorIndex }) => {
             <div className="cover-page">
                 {isMain ? (
                     <>
-                        <h2 style={{ fontSize: '1.1em', fontWeight: 600, margin: '0 0 5px 0', color: 'var(--gray)', textTransform: 'uppercase', letterSpacing: '2px' }}>
+                        <h2 style={{ fontSize: '1.2em', fontWeight: 600, margin: '0 0 5px 0', color: 'var(--gray)', textTransform: 'uppercase', letterSpacing: '2px' }}>
                             Coleção em Suporte Físico - Memorabilia
                         </h2>
                         <h1 className="cover-owner vcr-font" style={{ fontSize: '11em', margin: 0, lineHeight: 0.85, textTransform: 'uppercase' }}>
                             {ownerName || 'Acervo'}
                         </h1>
                         <div className="cover-meta">
-                            <div style={{ fontSize: '0.9em', marginTop: '15px', color: 'var(--gray)', fontWeight: 'bold' }}>Gerado a {dateStr}</div>
+                            <div style={{ fontSize: '1em', marginTop: '15px', color: 'var(--gray)', fontWeight: 'bold' }}>Gerado a {dateStr}</div>
                         </div>
                     </>
                 ) : (
                     <>
-                        {/* Removido o subtítulo "Categoria" */}
-                        <h1 className="category-title vcr-font" style={{ color: accent }}>{title}</h1>
+                        <h1 className="category-title vcr-font" style={{ color: accent, fontSize: '8em' }}>{title}</h1>
                     </>
                 )}
             </div>
@@ -361,7 +370,7 @@ const ItemCard = ({ item, accentColor }) => {
 
     let stat = safeString(item['Status']);
     if (cat === 'DISCOS' || cat === 'VÍDEO') {
-        stat = null; // Omitido visualmente, como pedido
+        stat = null; 
     }
 
     let pLabel = 'EDITORA/GRAVADORA';
@@ -412,7 +421,6 @@ export default function App() {
     
     const fileInputRef = useRef(null);
     
-    // Referências dos Gráficos
     const chartTypeRef = useRef(null);
     const chartStatusRef = useRef(null);
     const chartRatingRef = useRef(null);
@@ -476,8 +484,8 @@ export default function App() {
     const pdfPages = useMemo(() => {
         if (!csvData.length) return [];
         
-        const contentPages = [];
-        let logicalPage = 1; // Contador estrito de páginas de catálogo
+        const contentSections = [];
+        let logicalPage = 1; // Página inicial para o conteúdo
         const dateStr = new Date().toLocaleDateString('pt-PT');
 
         const grouped = {};
@@ -495,7 +503,6 @@ export default function App() {
         const authorColorMap = {};
         const tocData = [];
 
-        // Pré-processamento e Lógica Anti-Colisão
         sortedCategories.forEach(cat => {
             grouped[cat].sort((a, b) => {
                 const keyA = getSortKey(a);
@@ -514,7 +521,7 @@ export default function App() {
             });
         });
 
-        // Loop de Renderização das Páginas (Usando o logicalPage)
+        // 1. Montagem Contínua das Secções do Catálogo
         sortedCategories.forEach((cat, catIndex) => {
             const cleanCatName = cat.substring(2);
             const items = grouped[cat];
@@ -529,89 +536,52 @@ export default function App() {
                 return title;
             };
 
-            // Regista a página real onde a categoria começa
+            // Guarda info para o Sumário com uma estimativa grosseira da página (visto que o navegador paginará automaticamente agora)
             tocData.push({
                 category: cleanCatName,
-                startPage: logicalPage,
+                startPage: logicalPage, // O número correto para o início
                 count: items.length,
                 firstStr: formatItemStr(items[0]),
                 lastStr: formatItemStr(items[items.length - 1])
             });
 
-            // Folha de Rosto (Conta a página, mas NÃO EXIBE o rodapé)
-            contentPages.push(
+            // Adiciona Folha de Rosto (A folha de rosto consome 1 página inteira)
+            contentSections.push(
                 <CoverPage key={`cover-${cat}`} title={cleanCatName} isMain={false} colorIndex={catIndex + 1} />
             );
-            logicalPage++; 
-            
-            let allItemsToProcess = [...grouped[cat]];
-            const MAX_HEIGHT_MM = 248; // Compressão extrema para o limite inferior da folha A4
-            const ROW_GAP = 7.5;
+            logicalPage++; // Incrementa página por conta da folha de rosto
 
-            while (allItemsToProcess.length > 0) {
-                let currentPageItems = [];
-                let currentHeight = 0;
-
-                while (allItemsToProcess.length > 0) {
-                    let i1 = allItemsToProcess[0];
-                    let i2 = allItemsToProcess[1]; 
-
-                    let h1 = estimateItemHeight(i1);
-                    let h2 = i2 ? estimateItemHeight(i2) : 0;
-                    let rowHeight = Math.max(h1, h2) + ROW_GAP;
-
-                    // Trava de segurança - quebra página imediatamente antes de invadir o rodapé
-                    if (currentHeight + rowHeight > MAX_HEIGHT_MM && currentPageItems.length > 0) {
-                        break;
-                    }
-
-                    currentPageItems.push(allItemsToProcess.shift());
-                    if (i2) currentPageItems.push(allItemsToProcess.shift());
-                    currentHeight += rowHeight;
-                }
-
-                if (currentPageItems.length > 0) {
-                    const currentPageNumber = logicalPage; // Congela o número da página atual
+            // Usa a secção contínua e a classe CSS columns para auto-paginação fluída
+            // O navegador cuidará do limite de páginas. Retomamos a Counter-CSS nativa do CSS apenas para visual web, mas omitimos no HTML para confiar na impressão.
+            contentSections.push(
+                <div className="continuous-section" key={`section-${cat}`}>
+                    {/* Header fixo que repete na impressão (depende de suporte do navegador) */}
+                    <div className="page-header">
+                        <span className="vcr-font">{cleanCatName}</span>
+                        <span>Catálogo</span>
+                    </div>
                     
-                    let firstItem = currentPageItems[0];
-                    let lastItem = currentPageItems[currentPageItems.length-1];
-                    const getDictLetter = (str) => {
-                        if (!str) return '?';
-                        const char = str.charAt(0).toUpperCase();
-                        return /[0-9]/.test(char) ? '#' : char;
-                    };
-                    const firstLetter = getDictLetter(getSortKey(firstItem));
-                    const lastLetter = getDictLetter(getSortKey(lastItem));
-                    const dictStr = firstLetter === lastLetter ? firstLetter : `${firstLetter} - ${lastLetter}`;
-
-                    contentPages.push(
-                        <div className="pdf-page" key={`page-${cat}-${currentPageNumber}`}>
-                            <div className="page-header">
-                                <span className="vcr-font">{cleanCatName}</span>
-                                <span>{dictStr}</span>
-                            </div>
-                            
-                            <div className="catalog-grid">
-                                {currentPageItems.map((item, idx) => {
-                                    const authKey = getSortKey(item);
-                                    const itemColor = colorPalette[authorColorMap[authKey]];
-                                    return <ItemCard key={`item-${currentPageNumber}-${idx}`} item={item} accentColor={itemColor} />;
-                                })}
-                            </div>
-                            
-                            {/* O Número da página É EXIBIDO aqui */}
-                            <div className="page-footer"><span></span><span>{currentPageNumber}</span></div>
-                        </div>
-                    );
-                    logicalPage++;
-                }
-            }
+                    <div className="catalog-grid">
+                        {items.map((item, idx) => {
+                            const authKey = getSortKey(item);
+                            const itemColor = colorPalette[authorColorMap[authKey]];
+                            return <ItemCard key={`item-${cat}-${idx}`} item={item} accentColor={itemColor} />;
+                        })}
+                    </div>
+                    
+                    {/* Rodapé fixo - a numeração real aqui é contínua e manipulada nativamente pelo Print, mas colocamos a referência lógica */}
+                    <div className="page-footer"><span></span><span>{logicalPage}+</span></div>
+                </div>
+            );
+            // Estimativa de consumo de páginas para as próximas categorias no Sumário
+            // Uma média segura é de 10 itens por página.
+            logicalPage += Math.ceil(items.length / 10); 
         });
 
-        // Páginas de Estatísticas (também recebem numeração lógica)
-        contentPages.push(
+        // 2. Montagem de Estatísticas Isoladas
+        contentSections.push(
             <div className="pdf-page" key="stats-page-1">
-                <div className="page-header"><span className="vcr-font">Estatísticas 1/2</span><span>Visão Geral</span></div>
+                <div className="static-header"><span className="vcr-font">Estatísticas 1/2</span><span>Visão Geral</span></div>
                 <h2 style={{ fontWeight: 300, fontSize: '2em', marginBottom: '15px', marginTop: '5px' }}>Visão Geral do Acervo</h2>
                 <div className="stats-header-bar">
                     <div className="stat-block">
@@ -640,47 +610,41 @@ export default function App() {
                     <div className="chart-card"><h3>Status de Consumo</h3><div className="chart-container" style={{height:'160px'}}><canvas ref={chartStatusRef}></canvas></div></div>
                     <div className="chart-card"><h3>Distribuição de Notas</h3><div className="chart-container" style={{height:'160px'}}><canvas ref={chartRatingRef}></canvas></div></div>
                     
-                    {/* Gráfico Ano a Ano Duplicado de Tamanho */}
                     <div className="chart-card" style={{ gridColumn: '1 / -1' }}>
                         <h3>Lançamento Ano a Ano</h3>
-                        <div className="chart-container" style={{ height: '350px' }}><canvas ref={chartDecadeRef}></canvas></div>
+                        <div className="chart-container" style={{ height: '380px' }}><canvas ref={chartDecadeRef}></canvas></div>
                     </div>
                 </div>
-                <div className="page-footer"><span></span><span>{logicalPage}</span></div>
+                <div className="static-footer"><span></span><span>{logicalPage}</span></div>
             </div>
         );
         logicalPage++;
 
-        contentPages.push(
+        contentSections.push(
             <div className="pdf-page" key="stats-page-2">
-                <div className="page-header"><span className="vcr-font">Estatísticas 2/2</span><span>Os Maiores</span></div>
+                <div className="static-header"><span className="vcr-font">Estatísticas 2/2</span><span>Os Maiores</span></div>
                 <h2 style={{ fontWeight: 300, fontSize: '2em', marginBottom: '15px', marginTop: '5px' }}>Top Autores e Produtoras</h2>
                 <div className="stats-grid" style={{ gridTemplateColumns: '1fr', gap: '20px' }}>
-                    {/* Gráficos Top 10 Expandidos */}
                     <div className="chart-card" style={{ gridColumn: '1 / -1' }}>
                         <h3>Top 10 Autores/Desenvolvedoras</h3>
-                        <div className="chart-container" style={{ height: '350px' }}><canvas ref={chartAuthorRef}></canvas></div>
+                        <div className="chart-container" style={{ height: '380px' }}><canvas ref={chartAuthorRef}></canvas></div>
                     </div>
                     <div className="chart-card" style={{ gridColumn: '1 / -1' }}>
                         <h3>Top 10 Editoras/Gravadoras/Produtoras</h3>
-                        <div className="chart-container" style={{ height: '350px' }}><canvas ref={chartPubRef}></canvas></div>
+                        <div className="chart-container" style={{ height: '380px' }}><canvas ref={chartPubRef}></canvas></div>
                     </div>
                 </div>
-                <div className="page-footer"><span></span><span>{logicalPage}</span></div>
+                <div className="static-footer"><span></span><span>{logicalPage}</span></div>
             </div>
         );
 
-        // -----------------------------------------------------------
-        // Montagem Final do Documento: Capa -> Sumário -> Restante
-        // -----------------------------------------------------------
+        // 3. Montagem Final (Capa + Sumário + Conteúdo)
         const finalRender = [];
         
-        // Capa Principal (Sem número)
         finalRender.push(<CoverPage key="main-cover" isMain={true} ownerName={ownerName} dateStr={dateStr} colorIndex={0} />);
         
-        // Sumário (Sem número no footer)
         finalRender.push(
-            <div className="pdf-page" key="toc-page">
+            <div className="pdf-page" key="toc-page" style={{ pageBreakAfter: 'always' }}>
                 <div className="mondrian-decor">
                     <div className="m-line-v" style={{ left: '15mm', backgroundColor: '#e5e5e5' }}></div>
                     <div className="m-line-h" style={{ top: '30mm', backgroundColor: '#e5e5e5' }}></div>
@@ -704,13 +668,12 @@ export default function App() {
                                         <div style={{ fontSize: '0.85em', color: 'var(--black)', fontWeight: 800, marginTop: '10px', textTransform: 'uppercase' }}>
                                             QUANTIDADE: <span style={{ color: 'var(--gray)', fontWeight: 600 }}>{data.count} ITENS</span>
                                         </div>
-                                        <div style={{ fontSize: '0.8em', color: 'var(--gray)', fontWeight: 600, marginTop: '6px', lineHeight: '1.4' }}>
-                                            De: <span style={{color: 'var(--black)'}}>{data.firstStr}</span> <br/>
-                                            Até: <span style={{color: 'var(--black)'}}>{data.lastStr}</span>
+                                        <div style={{ fontSize: '0.7em', color: 'var(--gray)', fontWeight: 600, marginTop: '6px', lineHeight: '1.4' }}>
+                                            <span style={{color: 'var(--black)'}}>{data.firstStr}</span> <br/>
+                                            <span style={{color: 'var(--black)'}}>{data.lastStr}</span>
                                         </div>
                                     </div>
                                     
-                                    {/* p. discreto ao lado do número gigante */}
                                     <div className="vcr-font" style={{ fontSize: '4.5em', color: accent, WebkitTextStroke: '1px var(--black)', textShadow: '3px 3px 0px rgba(0,0,0,0.1)', whiteSpace: 'nowrap', display: 'flex', alignItems: 'baseline' }}>
                                         <span style={{fontSize: '0.3em', WebkitTextStroke: '0', color: 'var(--gray)', textShadow: 'none', marginRight: '6px', letterSpacing: '0'}}>p.</span>
                                         {String(data.startPage).padStart(2, '0')}
@@ -723,8 +686,7 @@ export default function App() {
             </div>
         );
 
-        // Adiciona as páginas de conteúdo numeradas
-        finalRender.push(...contentPages);
+        finalRender.push(...contentSections);
 
         return finalRender;
     }, [csvData, ownerName, aggregates]);
